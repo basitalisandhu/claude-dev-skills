@@ -158,7 +158,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the ground rules and [docs/good-first
 | Project | What it is |
 |---|---|
 | [agent-security-skills](https://github.com/basitalisandhu/agent-security-skills) | Claude Code plugin for securing LLM agents: threat modelling, config audits, prompt injection review, MCP server review, incident lookup |
-| [hisar](https://github.com/basitalisandhu/hisar) | Open-source trust infrastructure for AI agents: identity, scoped credentials, approvals and audit |
+| [masoon](https://github.com/basitalisandhu/masoon) | Open-source trust infrastructure for AI agents: identity, scoped credentials, approvals and audit |
 
 ## Licence
 
