@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# Node
+node_modules/
+
+# Local output from the skill scripts
+*.report.json
+*.report.md
+
+# Editors and OS
+.DS_Store
+.idea/
+.vscode/
+
+# build and environment artifacts
+node_modules/
+.venv/
+venv/
+dist/
+build/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+.DS_Store
+.semgrep/
+results.sarif

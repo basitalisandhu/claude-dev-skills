@@ -1,0 +1,91 @@
+{
+  "name": "claude-dev-skills",
+  "description": "Everyday developer skills for Claude Code: code quality, debugging, devops, data, docs and security basics. Forty skills in six plugins, each with a procedure, an output format and, where it helps, a tested standard-library script.",
+  "owner": {
+    "name": "Muhammad Basit Ali",
+    "url": "https://github.com/basitalisandhu"
+  },
+  "metadata": {
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "code-quality",
+      "source": "./plugins/code-quality",
+      "description": "Review checklist, refactor planning, dead code and complexity reports, naming and error-handling audits, type coverage and test gap finder.",
+      "version": "0.1.0",
+      "author": {"name": "Muhammad Basit Ali", "url": "https://github.com/basitalisandhu"},
+      "homepage": "https://github.com/basitalisandhu/claude-dev-skills",
+      "repository": "https://github.com/basitalisandhu/claude-dev-skills",
+      "license": "MIT",
+      "keywords": ["code-review", "refactoring", "complexity", "dead-code", "types", "tests"],
+      "category": "development",
+      "tags": ["code-quality", "review", "refactoring"]
+    },
+    {
+      "name": "debugging",
+      "source": "./plugins/debugging",
+      "description": "Bug reproduction minimiser, log triage, flaky test hunter, stack trace explainer, profile reader and a memory leak checklist.",
+      "version": "0.1.0",
+      "author": {"name": "Muhammad Basit Ali", "url": "https://github.com/basitalisandhu"},
+      "homepage": "https://github.com/basitalisandhu/claude-dev-skills",
+      "repository": "https://github.com/basitalisandhu/claude-dev-skills",
+      "license": "MIT",
+      "keywords": ["debugging", "logs", "flaky-tests", "profiling", "memory-leaks"],
+      "category": "development",
+      "tags": ["debugging", "logs", "performance"]
+    },
+    {
+      "name": "devops",
+      "source": "./plugins/devops",
+      "description": "Dockerfile hardening, GitHub Actions authoring, Kubernetes manifest and Terraform review, cron doctor, env file diff, release notes and a semver advisor.",
+      "version": "0.1.0",
+      "author": {"name": "Muhammad Basit Ali", "url": "https://github.com/basitalisandhu"},
+      "homepage": "https://github.com/basitalisandhu/claude-dev-skills",
+      "repository": "https://github.com/basitalisandhu/claude-dev-skills",
+      "license": "MIT",
+      "keywords": ["docker", "github-actions", "kubernetes", "terraform", "cron", "release-notes", "semver"],
+      "category": "devops",
+      "tags": ["devops", "ci", "containers", "infrastructure"]
+    },
+    {
+      "name": "data",
+      "source": "./plugins/data",
+      "description": "SQL query review, schema migration planning, CSV profiler, JSON Schema inference, regex builder and OpenAPI 3 contract review.",
+      "version": "0.1.0",
+      "author": {"name": "Muhammad Basit Ali", "url": "https://github.com/basitalisandhu"},
+      "homepage": "https://github.com/basitalisandhu/claude-dev-skills",
+      "repository": "https://github.com/basitalisandhu/claude-dev-skills",
+      "license": "MIT",
+      "keywords": ["sql", "migrations", "csv", "json-schema", "regex", "openapi"],
+      "category": "data",
+      "tags": ["data", "sql", "api", "schemas"]
+    },
+    {
+      "name": "docs",
+      "source": "./plugins/docs",
+      "description": "README author, ADR writer, changelog keeper, onboarding doc, API docs from code and a postmortem writer.",
+      "version": "0.1.0",
+      "author": {"name": "Muhammad Basit Ali", "url": "https://github.com/basitalisandhu"},
+      "homepage": "https://github.com/basitalisandhu/claude-dev-skills",
+      "repository": "https://github.com/basitalisandhu/claude-dev-skills",
+      "license": "MIT",
+      "keywords": ["documentation", "readme", "adr", "changelog", "postmortem"],
+      "category": "documentation",
+      "tags": ["docs", "writing"]
+    },
+    {
+      "name": "security-basics",
+      "source": "./plugins/security-basics",
+      "description": "Secrets hygiene scan, dependency audit reader, HTTP security header check, JWT inspector, CORS review and auth flow review. For agent-specific security see agent-security-skills.",
+      "version": "0.1.0",
+      "author": {"name": "Muhammad Basit Ali", "url": "https://github.com/basitalisandhu"},
+      "homepage": "https://github.com/basitalisandhu/claude-dev-skills",
+      "repository": "https://github.com/basitalisandhu/claude-dev-skills",
+      "license": "MIT",
+      "keywords": ["security", "secrets", "dependencies", "http-headers", "jwt", "cors", "authentication"],
+      "category": "security",
+      "tags": ["security", "appsec"]
+    }
+  ]
+}
