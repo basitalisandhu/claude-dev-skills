@@ -80,6 +80,18 @@ def test_single_quoted(write, tmp_path):
     assert rep["dialect"]["quotechar"] == "'"
 
 
+def test_doublequote_reported_only_when_escaped(write, tmp_path):
+    f1 = write("plain_quote.csv", 'id,name\n1,"Ann"\n2,"Bob"\n')
+    rc, rep1 = run_json(mod, [str(f1), "--json"])
+    assert rc == 0
+    assert "doublequote" not in rep1["dialect"]
+
+    f2 = write("escaped.csv", 'id,name\n1,"Ann ""A"" Smith"\n')
+    rc, rep2 = run_json(mod, [str(f2), "--json"])
+    assert rc == 0
+    assert rep2["dialect"]["doublequote"] is True
+
+
 def test_text_dialect_line(write, tmp_path):
     f = write("plain.csv", "a,b\n1,2\n")
     rc, out, _ = run_main(mod, [str(f)])
@@ -87,3 +99,12 @@ def test_text_dialect_line(write, tmp_path):
     assert "dialect:" in out
     assert "line_terminator=LF" in out
     assert "bom=False" in out
+
+
+def test_mixed_line_endings(write, tmp_path):
+    content = "a,b\r\n1,2\n3,4\r\n"
+    f = write("mixed.csv", content)
+    rc, rep = run_json(mod, [str(f), "--json"])
+    assert rc == 0
+    assert rep["dialect"]["line_terminator"] == "mixed"
+    assert any("mixed line endings" in w for w in rep["warnings"])

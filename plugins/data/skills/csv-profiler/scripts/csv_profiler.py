@@ -124,11 +124,10 @@ def profile(path: Path, delimiter: str | None, has_header: bool, sample: int | N
     text = raw.decode(encoding, errors="replace")
     if not text.strip():
         raise ValueError("file is empty")
-    quotechar, doublequote = '"', True
+    quotechar, doublequote = '"', b'""' in head
     try:
         dialect = csv.Sniffer().sniff(text[:65536], delimiters=",;\t|")
         quotechar = dialect.quotechar
-        doublequote = dialect.doublequote
         if delimiter is None:
             delimiter = dialect.delimiter
     except csv.Error:
@@ -181,22 +180,29 @@ def profile(path: Path, delimiter: str | None, has_header: bool, sample: int | N
             warnings.append(f"column {c['name']} has {c['leading_or_trailing_space']} values with leading or trailing whitespace")
         if 0 < c["null_percent"] and c["null_percent"] >= 50:
             warnings.append(f"column {c['name']} is {c['null_percent']}% null")
-    return {"version": VERSION, "file": str(path), "delimiter": delimiter,
-            "dialect": {"delimiter": delimiter, "quotechar": quotechar, "doublequote": doublequote, "line_terminator": line_terminator}, "bom": bom,
-            "header": has_header, "rows": len(data), "columns_count": width,
-            "ragged_rows": ragged[:20], "duplicate_rows": dup_rows, "blank_rows": blank, "candidate_keys": [c["name"] for c in columns if c["unique"]],
+    dialect_info = {
+        "delimiter": delimiter,
+        "quotechar": quotechar,
+        "line_terminator": line_terminator,
+    }
+    if doublequote:
+        dialect_info["doublequote"] = True
+    return {"version": VERSION, "file": str(path), "delimiter": delimiter, "dialect": dialect_info, "bom": bom,
+            "header": has_header, "rows": len(data), "columns_count": width, "ragged_rows": ragged[:20],
+            "duplicate_rows": dup_rows, "blank_rows": blank, "candidate_keys": [c["name"] for c in columns if c["unique"]],
             "columns": columns, "warnings": warnings}
 
 
 def render_text(p: dict) -> str:
     d = {"\t": "TAB"}.get(p["delimiter"], p["delimiter"])
     lines = [f"csv-profiler {p['version']}: {p['file']}: {p['rows']} rows x {p['columns_count']} columns, delimiter '{d}', header={'yes' if p['header'] else 'no'}"]
-    lines.append(
-        f"dialect: quotechar={p['dialect']['quotechar']!r}, "
-        f"doublequote={p['dialect']['doublequote']}, "
-        f"line_terminator={p['dialect']['line_terminator']}, "
-        f"bom={p['bom']}"
-    )
+    dq = p["dialect"].get("doublequote")
+    parts = [f"quotechar={p['dialect']['quotechar']!r}"]
+    if dq is not None:
+        parts.append(f"doublequote={dq}")
+    parts.append(f"line_terminator={p['dialect']['line_terminator']}")
+    parts.append(f"bom={p['bom']}")
+    lines.append("dialect: " + ", ".join(parts))
     if p["candidate_keys"]:
         lines.append("candidate keys (unique, non-null): " + ", ".join(p["candidate_keys"]))
     lines.append(f"{'column':<24} {'type':<9} {'nulls':>6} {'distinct':>8}  range / stats")
