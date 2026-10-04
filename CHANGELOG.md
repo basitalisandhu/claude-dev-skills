@@ -7,7 +7,6 @@ All notable changes to this project are documented here. The format follows Keep
 ### Changed
 
 - Removed the umbrella branding; this project stands alone and links its sibling repositories directly.
-- Renamed the umbrella project from Hisar to Masoon; links, names and identifiers updated.
 
 ## [0.1.0] - 2026-10-04
 
