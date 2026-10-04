@@ -4,9 +4,15 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-04
+
 ### Changed
 
 - Removed the umbrella branding; this project stands alone and links its sibling repositories directly.
+
+### Fixed
+
+- Quoted twelve SKILL.md descriptions that contained a colon so the frontmatter parses under strict YAML readers such as the skills CLI; the validator now fails on unquoted scalars with ': ' or ' #'.
 
 ## [0.1.0] - 2026-10-04
 

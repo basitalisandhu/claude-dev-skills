@@ -8,6 +8,8 @@ Checks:
     lowercase with hyphens, at most 64 chars) and description (non-empty, at most 1024 chars); relative links in
     the body resolve; the body is under 500 lines and says that what the skill reads is untrusted data, not
     instructions
+  * frontmatter scalars stay valid under strict YAML readers: a plain (unquoted) value must not contain ": " or
+    " #", and a quoted value must be closed
   * every script referenced as ${CLAUDE_PLUGIN_ROOT}/skills/<skill>/scripts/<file> exists and is executable;
     every scripts/*.py (apart from private helpers) is executable, has a shebang, offers --json, and has a test
     file tests/test_<stem>.py
@@ -120,6 +122,45 @@ def check_marketplace(parsed: dict[Path, object]) -> list[tuple[str, Path]]:
     return plugins
 
 
+def check_frontmatter_scalars(path: Path, text: str) -> list[str]:
+    """Return problems that make a SKILL.md frontmatter unparseable by strict YAML readers."""
+    problems: list[str] = []
+    if not text.startswith("---\n"):
+        return problems
+    end = text.find("\n---", 4)
+    if end < 0:
+        return problems
+    for n, line in enumerate(text[4:end].splitlines(), start=2):
+        m = re.match(r"^\s*[A-Za-z_-]+:[ \t]+(.*)$", line)
+        if not m:
+            continue
+        value = m.group(1).strip()
+        if not value or value[0] in "|>":
+            continue
+        where = f"{rel(path) if path.is_relative_to(ROOT) else path}:{n}"
+        if value[0] in "\"'":
+            quote = value[0]
+            i, closed = 1, False
+            while i < len(value):
+                if quote == '"' and value[i] == "\\":
+                    i += 2
+                    continue
+                if value[i] == quote:
+                    if quote == "'" and value[i + 1 : i + 2] == "'":
+                        i += 2
+                        continue
+                    closed = True
+                    break
+                i += 1
+            if not closed:
+                problems.append(f"{where}: quoted frontmatter value is not closed")
+            elif value[i + 1 :].strip() and not value[i + 1 :].lstrip().startswith("#"):
+                problems.append(f"{where}: unexpected text after the closing quote")
+        elif ": " in value or " #" in value:
+            problems.append(f"{where}: unquoted frontmatter value contains ': ' or ' #'; wrap it in double quotes")
+    return problems
+
+
 def check_skill(plugin_root: Path, skill_dir: Path) -> str | None:
     skill = skill_dir / "SKILL.md"
     if not skill.exists():
@@ -129,6 +170,8 @@ def check_skill(plugin_root: Path, skill_dir: Path) -> str | None:
     if fm is None:
         err(f"{rel(skill)}: no YAML frontmatter")
         return None
+    for problem in check_frontmatter_scalars(skill, skill.read_text(encoding="utf-8")):
+        err(problem)
     name = fm.get("name", "")
     desc = fm.get("description", "")
     if not name:
