@@ -39,6 +39,8 @@ Requirements: Python 3.11 or newer on `PATH` as `python3` for the scripts (stand
 
 After installing, skills appear as `/<plugin>:<skill>`, for example `/devops:dockerfile-hardening`, and Claude invokes them on its own when a request matches a skill's description.
 
+This pack is also part of [claude-skills](https://github.com/basitalisandhu/claude-skills), which holds every skill I maintain as one marketplace: `/plugin marketplace add basitalisandhu/claude-skills`.
+
 ## What is inside
 
 ```text
@@ -160,6 +162,7 @@ More tools by the same author: https://github.com/basitalisandhu
 | Project | What it is |
 |---|---|
 | [agent-security-skills](https://github.com/basitalisandhu/agent-security-skills) | Claude Code plugin for securing LLM agents: threat modelling, config audits, prompt injection review, MCP server review, incident lookup |
+| [Install every Claude Code skill at once](https://github.com/basitalisandhu/claude-skills) | All packs in one repository; the catalog is at https://basitalisandhu.github.io/claude-skills/ |
 
 ## Licence
 
