@@ -59,3 +59,31 @@ def test_classify():
     assert c("12") == "integer" and c("1,234") == "integer" and c("3.5") == "number" and c("1e5") == "number"
     assert c("2024-01-01") == "date" and c("2024-01-01T10:00:00Z") == "datetime" and c("yes") == "boolean"
     assert c("N/A") == "null" and c("hello") == "string"
+
+
+def test_crlf_with_bom(write, tmp_path):
+    content = "\ufeffid,name\r\n1,Ann\r\n2,Bob\r\n"
+    f = write("crlf_bom.csv", content)
+    rc, rep = run_json(mod, [str(f), "--json"])
+    assert rc == 0
+    assert rep["bom"] is True
+    assert rep["dialect"]["line_terminator"] == "CRLF"
+    assert [c["name"] for c in rep["columns"]] == ["id", "name"]
+    assert any("BOM" in w for w in rep["warnings"])
+
+
+def test_single_quoted(write, tmp_path):
+    content = "id,name\n1,'Ann, A'\n2,'Bob'\n"
+    f = write("squote.csv", content)
+    rc, rep = run_json(mod, [str(f), "--json"])
+    assert rc == 0
+    assert rep["dialect"]["quotechar"] == "'"
+
+
+def test_text_dialect_line(write, tmp_path):
+    f = write("plain.csv", "a,b\n1,2\n")
+    rc, out, _ = run_main(mod, [str(f)])
+    assert rc == 0
+    assert "dialect:" in out
+    assert "line_terminator=LF" in out
+    assert "bom=False" in out
