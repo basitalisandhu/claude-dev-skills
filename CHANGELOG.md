@@ -4,6 +4,14 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-05
+
+### Changed
+
+- Every skill description now carries a double-quoted phrase a user would type. Added one to the 28 descriptions without it (adr-writer, api-contract-review, api-docs-from-code, changelog-keeper, complexity-report, cors-review, cron-doctor, csv-profiler, dead-code-finder, dependency-audit-reader, dockerfile-hardening, github-actions-author, json-schema-author, jwt-inspector, k8s-manifest-review, memory-leak-checklist, onboarding-doc, perf-profile-reader, postmortem-writer, readme-author, regex-builder, release-notes, schema-migration-plan, sql-query-review, stack-trace-explainer, terraform-review, test-gap-finder, type-coverage), and postmortem-writer now has a "Use when" sentence.
+- Reworded cron-doctor, dead-code-finder, dockerfile-hardening and regex-builder around how people ask for them (goal first, user wording such as "review my Dockerfile"); recall on the labelled trigger prompts rose from 0.40, 0.60, 0.40 and 0.40 to 1.00, 1.00, 1.00 and 0.80, with precision unchanged at 1.00.
+- `scripts/validate_plugins.py` now fails on a description without a double-quoted trigger phrase of 2 to 8 words, with tests.
+
 ## [0.2.0] - 2026-10-05
 
 ### Added
