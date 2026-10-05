@@ -43,7 +43,7 @@ def warn(msg: str) -> None:
 
 
 def rel(p: Path) -> str:
-    return str(p.relative_to(ROOT))
+    return p.relative_to(ROOT).as_posix()
 
 
 def frontmatter(path: Path) -> dict[str, str] | None:
@@ -138,7 +138,7 @@ def check_frontmatter_scalars(path: Path, text: str) -> list[str]:
         value = m.group(1).strip()
         if not value or value[0] in "|>":
             continue
-        where = f"{rel(path) if path.is_relative_to(ROOT) else path}:{n}"
+        where = f"{rel(path) if path.is_relative_to(ROOT) else path.as_posix()}:{n}"
         if value[0] in "\"'":
             quote = value[0]
             i, closed = 1, False
