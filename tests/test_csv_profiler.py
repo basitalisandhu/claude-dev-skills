@@ -78,6 +78,7 @@ def test_single_quoted(write, tmp_path):
     rc, rep = run_json(mod, [str(f), "--json"])
     assert rc == 0
     assert rep["dialect"]["quotechar"] == "'"
+    assert "doublequote" not in rep["dialect"]
 
 
 def test_doublequote_reported_only_when_escaped(write, tmp_path):
@@ -95,6 +96,18 @@ def test_doublequote_reported_only_when_escaped(write, tmp_path):
     rc, rep3 = run_json(mod, [str(f3), "--json"])
     assert rc == 0
     assert "doublequote" not in rep3["dialect"]
+
+    # Unquoted inch mark is not an escape
+    f4 = write("inch.csv", 'id,note\n1,5" screen\n')
+    rc, rep4 = run_json(mod, [str(f4), "--json"])
+    assert rc == 0
+    assert "doublequote" not in rep4["dialect"]
+
+    # Single-quoted escape: 'it''s'
+    f5 = write("squote_escape.csv", "id,note\n1,'it''s'\n")
+    rc, rep5 = run_json(mod, [str(f5), "--json"])
+    assert rc == 0
+    assert rep5["dialect"]["doublequote"] is True
 
 
 def test_text_dialect_line(write, tmp_path):

@@ -57,6 +57,24 @@ def detect_line_terminator(raw: bytes) -> str:
     return "unknown"
 
 
+def has_escaped_quote(text: str, quotechar: str, delimiter: str) -> bool:
+    """Return True when text contains a doubled quotechar inside a non-empty field.
+
+    A doubled quotechar is an escape when there is field content around it,
+    and is an empty field when it is alone between delimiters or line ends.
+    """
+    skip_chars = frozenset({delimiter, "\n", "\r"})
+    pair = quotechar * 2
+    idx = text.find(pair)
+    while idx != -1:
+        before = text[idx - 1] if idx > 0 else "\n"
+        after = text[idx + 2] if idx + 2 < len(text) else "\n"
+        if skip_chars.isdisjoint((before, after)):
+            return True
+        idx = text.find(pair, idx + 2)
+    return False
+
+
 def classify(value: str) -> str:
     v = value.strip()
     if v in NULLS:
@@ -138,7 +156,7 @@ def profile(path: Path, delimiter: str | None, has_header: bool, sample: int | N
         text = text.lstrip("\ufeff")
     line_terminator = detect_line_terminator(head)
     rows = list(csv.reader(text.splitlines(), delimiter=delimiter))
-    doublequote = any(quotechar in cell for row in rows for cell in row)
+    doublequote = has_escaped_quote(text, quotechar, delimiter)
     blank = sum(1 for r in rows if not any(c.strip() for c in r))
     rows = [r for r in rows if any(c.strip() for c in r)]
     if not rows:
