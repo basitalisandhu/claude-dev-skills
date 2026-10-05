@@ -2,7 +2,7 @@
 
 Eight skills for shipping and operating software: Dockerfile hardening, GitHub Actions authoring and validation, Kubernetes manifest review, Terraform review, crontab diagnosis, .env key diffs, release notes from git history, and a semver advisor.
 
-Find this when you search for: Docker image too big, docker compose, CI pipeline timeout.
+Find this when you search for: Docker image too big, CI pipeline timeout.
 
 ## Install
 

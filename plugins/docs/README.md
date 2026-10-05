@@ -2,7 +2,7 @@
 
 Six skills for writing documentation that stays accurate: a README author, an ADR writer, a changelog keeper, an onboarding document, API docs extracted from docstrings and JSDoc, and a postmortem writer.
 
-Find this when you search for: PRD, incident report, technical writing.
+Find this when you search for: incident report, technical writing.
 
 ## Install
 
