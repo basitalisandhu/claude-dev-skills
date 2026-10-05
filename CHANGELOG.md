@@ -8,6 +8,8 @@ All notable changes to this project are documented here. The format follows Keep
 
 ### Added
 
+- csv-profiler: the dialect report now says whether quoted fields escape quotes by doubling them, and detects CRLF, BOM and mixed line endings (contributed by echomehran in #14, closes #8).
+
 - `terraform-apply-gate` (devops, script): checks a saved Terraform plan (`terraform show -json`) against a small YAML policy (forbidden destroys by resource type, required tags, a replacement and delete ceiling, protected names, allowed providers) and prints an allow, ask or block verdict with a reason per resource; exit 0 allow, 1 ask or block, 2 bad input.
 - `diff-security-review` (security-basics, script): scans the added lines of a saved `git diff` or `gh pr diff` for new network calls, shell and process execution, unsafe deserialisation, SQL built from strings, credential-shaped literals (redacted), disabled TLS checks and new permissions in workflows and manifests, with file and line, for a reader to judge in context.
 
