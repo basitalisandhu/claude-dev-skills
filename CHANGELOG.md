@@ -4,6 +4,9 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [Unreleased]
 
+### Added
+
+- `changelog-keeper show --format github` produces release-body categories, bullets and an optional compare link without changing default or JSON output.
 ## [0.1.1] - 2026-10-04
 
 ### Changed

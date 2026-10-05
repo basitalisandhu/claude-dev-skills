@@ -30,6 +30,22 @@ All notable changes to this project are documented here.
 """
 
 
+def test_github_show_formats_categories_and_compare_link(write):
+    f = write("CHANGELOG.md", CHANGELOG)
+    rc, out, _ = run_main(mod, ["show", "1.1.0", "--file", str(f), "--format", "github"])
+    assert rc == 0
+    assert out == "**Fixed**\n\n- A bug.\n\nFull changelog: https://github.com/o/r/compare/v1.0.0...v1.1.0\n"
+    rc, rep = run_json(mod, ["show", "1.1.0", "--file", str(f), "--format", "github", "--json"])
+    assert rc == 0 and rep["categories"] == [{"name": "Fixed", "entries": ["A bug."]}]
+
+
+def test_github_show_without_link_has_no_trailing_compare_line(write):
+    f = write("CHANGELOG.md", "# Changelog\n\n## [Unreleased]\n\n### Added\n\n- First.\n\n### Fixed\n\n- Second.\n")
+    rc, out, _ = run_main(mod, ["show", "--file", str(f), "--format", "github"])
+    assert rc == 0
+    assert out == "**Added**\n\n- First.\n\n**Fixed**\n\n- Second.\n"
+
+
 def test_check_passes_and_show_latest(write, tmp_path):
     f = write("CHANGELOG.md", CHANGELOG)
     rc, rep = run_json(mod, ["--file", str(f), "--json", "check"])
