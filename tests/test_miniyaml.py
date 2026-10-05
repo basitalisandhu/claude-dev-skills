@@ -9,6 +9,7 @@ from conftest import PLUGINS
 COPIES = [
     PLUGINS / "devops/skills/github-actions-author/scripts/_miniyaml.py",
     PLUGINS / "devops/skills/k8s-manifest-review/scripts/_miniyaml.py",
+    PLUGINS / "devops/skills/terraform-apply-gate/scripts/_miniyaml.py",
     PLUGINS / "data/skills/api-contract-review/scripts/_miniyaml.py",
 ]
 
