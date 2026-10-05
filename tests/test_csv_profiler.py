@@ -66,7 +66,7 @@ def test_crlf_with_bom(write, tmp_path):
     f = write("crlf_bom.csv", content)
     rc, rep = run_json(mod, [str(f), "--json"])
     assert rc == 0
-    assert rep["bom"] is True
+    assert rep["dialect"]["bom"] is True
     assert rep["dialect"]["line_terminator"] == "CRLF"
     assert [c["name"] for c in rep["columns"]] == ["id", "name"]
     assert any("BOM" in w for w in rep["warnings"])
@@ -90,6 +90,11 @@ def test_doublequote_reported_only_when_escaped(write, tmp_path):
     rc, rep2 = run_json(mod, [str(f2), "--json"])
     assert rc == 0
     assert rep2["dialect"]["doublequote"] is True
+
+    f3 = write("empty_field.csv", 'id,name,note\n1,"",x\n')
+    rc, rep3 = run_json(mod, [str(f3), "--json"])
+    assert rc == 0
+    assert "doublequote" not in rep3["dialect"]
 
 
 def test_text_dialect_line(write, tmp_path):

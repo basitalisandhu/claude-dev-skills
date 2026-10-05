@@ -124,7 +124,7 @@ def profile(path: Path, delimiter: str | None, has_header: bool, sample: int | N
     text = raw.decode(encoding, errors="replace")
     if not text.strip():
         raise ValueError("file is empty")
-    quotechar, doublequote = '"', b'""' in head
+    quotechar = '"'
     try:
         dialect = csv.Sniffer().sniff(text[:65536], delimiters=",;\t|")
         quotechar = dialect.quotechar
@@ -138,6 +138,7 @@ def profile(path: Path, delimiter: str | None, has_header: bool, sample: int | N
         text = text.lstrip("\ufeff")
     line_terminator = detect_line_terminator(head)
     rows = list(csv.reader(text.splitlines(), delimiter=delimiter))
+    doublequote = any(quotechar in cell for row in rows for cell in row)
     blank = sum(1 for r in rows if not any(c.strip() for c in r))
     rows = [r for r in rows if any(c.strip() for c in r)]
     if not rows:
@@ -184,10 +185,11 @@ def profile(path: Path, delimiter: str | None, has_header: bool, sample: int | N
         "delimiter": delimiter,
         "quotechar": quotechar,
         "line_terminator": line_terminator,
+        "bom": bom,
     }
     if doublequote:
         dialect_info["doublequote"] = True
-    return {"version": VERSION, "file": str(path), "delimiter": delimiter, "dialect": dialect_info, "bom": bom,
+    return {"version": VERSION, "file": str(path), "delimiter": delimiter, "dialect": dialect_info,
             "header": has_header, "rows": len(data), "columns_count": width, "ragged_rows": ragged[:20],
             "duplicate_rows": dup_rows, "blank_rows": blank, "candidate_keys": [c["name"] for c in columns if c["unique"]],
             "columns": columns, "warnings": warnings}
@@ -201,7 +203,7 @@ def render_text(p: dict) -> str:
     if dq is not None:
         parts.append(f"doublequote={dq}")
     parts.append(f"line_terminator={p['dialect']['line_terminator']}")
-    parts.append(f"bom={p['bom']}")
+    parts.append(f"bom={p['dialect']['bom']}")
     lines.append("dialect: " + ", ".join(parts))
     if p["candidate_keys"]:
         lines.append("candidate keys (unique, non-null): " + ", ".join(p["candidate_keys"]))
