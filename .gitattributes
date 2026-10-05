@@ -1,0 +1,2 @@
+# Keep LF line endings on every checkout (Windows included): the scripts, fixtures and SKILL.md front matter assume them.
+* text=auto eol=lf

@@ -24,7 +24,7 @@ yaml = _load()
 
 
 def test_copies_are_identical():
-    texts = {p.read_text() for p in COPIES}
+    texts = {p.read_text(encoding="utf-8") for p in COPIES}
     assert len(texts) == 1
 
 

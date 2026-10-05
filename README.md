@@ -6,6 +6,8 @@ claude-dev-skills is a Claude Code plugin marketplace for the work developers do
 
 No network access, no telemetry: scripts read the files you point them at and write only where you ask.
 
+Find this when you search for: code review checklist, tech debt, code smells, flaky tests, CI fails randomly, race condition, Docker image too big, zero-downtime migration, ReDoS, release notes, incident report, OWASP Top 10, npm audit fix.
+
 ## When to use this
 
 - Review this PR against a fixed checklist before merging: `review-checklist`
@@ -51,7 +53,7 @@ plugins/<plugin>/
     ├── SKILL.md                    frontmatter (name, description with when and when not), procedure, output format
     ├── scripts/<name>.py           optional: argparse, --json, exit codes 0/1/2, standard library only
     └── references/*.md             optional: checklists, templates, per-tool notes
-tests/test_<script>.py              pytest for every script (23 scripts, 111 tests)
+tests/test_<script>.py              pytest for every script (23 scripts, 127 tests)
 scripts/validate_plugins.py         structure, frontmatter, scripts, READMEs and house style
 ```
 
@@ -143,12 +145,12 @@ Report security problems privately: see [SECURITY.md](SECURITY.md).
 
 ## Compatibility with agentskills.io
 
-Every `SKILL.md` follows the Agent Skills format: frontmatter with `name` (equal to the directory name) and `description` (at most 1024 characters, saying when to use the skill and when not to), optional `license`, `compatibility` and `metadata`, supporting files in `references/` and `scripts/`, and a body under 500 lines. Skill bodies reference `${CLAUDE_PLUGIN_ROOT}` for script paths; other hosts should substitute the skill's own directory.
+Every `SKILL.md` follows the Agent Skills format: frontmatter with `name` (equal to the directory name) and `description` (double-quoted, at most 600 characters here against the format's 1024, with a "Use when" and a "Not for" sentence), optional `license`, `compatibility` and `metadata`, supporting files in `references/` and `scripts/`, and a body under 500 lines. Skill bodies reference `${CLAUDE_PLUGIN_ROOT}` for script paths; other hosts should substitute the skill's own directory.
 
 ## Development
 
 ```bash
-python3 -m pytest -q                       # 111 tests across 23 scripts and the bundled YAML reader
+python3 -m pytest -q                       # 127 tests across 23 scripts, the bundled YAML reader and the validator
 python3 scripts/validate_plugins.py        # structure, frontmatter, scripts, READMEs, house style
 claude plugin validate --strict . && for p in plugins/*/; do claude plugin validate --strict "$p"; done
 ```

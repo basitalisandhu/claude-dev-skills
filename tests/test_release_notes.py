@@ -1,3 +1,4 @@
+import os
 import shutil
 import subprocess
 
@@ -53,14 +54,17 @@ def test_empty_input_and_missing_file(write, tmp_path):
 def test_runs_git_log_locally(tmp_path):
     repo = tmp_path / "repo"
     repo.mkdir()
-    env = {"GIT_AUTHOR_NAME": "T", "GIT_AUTHOR_EMAIL": "t@example.com", "GIT_COMMITTER_NAME": "T", "GIT_COMMITTER_EMAIL": "t@example.com", "HOME": str(tmp_path), "PATH": "/usr/bin:/bin:/usr/local/bin"}
+    # Inherit the environment (Windows git needs SYSTEMROOT and friends) but ignore the user's and system git config.
+    (tmp_path / "gitconfig").write_text("", encoding="utf-8")
+    env = {**os.environ, "GIT_AUTHOR_NAME": "T", "GIT_AUTHOR_EMAIL": "t@example.com", "GIT_COMMITTER_NAME": "T", "GIT_COMMITTER_EMAIL": "t@example.com",
+           "HOME": str(tmp_path), "USERPROFILE": str(tmp_path), "GIT_CONFIG_GLOBAL": str(tmp_path / "gitconfig"), "GIT_CONFIG_NOSYSTEM": "1"}
     def git(*a):
         subprocess.run(["git", "-C", str(repo), *a], check=True, capture_output=True, env=env)
     git("init", "-q")
-    (repo / "a.txt").write_text("a")
+    (repo / "a.txt").write_text("a", encoding="utf-8")
     git("add", "a.txt")
     git("commit", "-q", "-m", "feat: first feature")
-    (repo / "a.txt").write_text("b")
+    (repo / "a.txt").write_text("b", encoding="utf-8")
     git("commit", "-q", "-am", "fix: a bug")
     rc, notes = run_json(mod, ["--repo", str(repo), "--json"])
     assert rc == 0 and notes["commits"] == 2
