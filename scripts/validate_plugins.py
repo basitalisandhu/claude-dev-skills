@@ -5,9 +5,10 @@ Checks:
   * every JSON file parses; marketplace.json has name, owner.name and plugins[]; every plugin source directory
     exists and its plugin.json name equals the entry name
   * every plugins/<plugin>/skills/<name>/SKILL.md has YAML frontmatter with name (equal to the directory name,
-    lowercase with hyphens, at most 64 chars) and description (non-empty, at most 1024 chars); relative links in
-    the body resolve; the body is under 500 lines and says that what the skill reads is untrusted data, not
-    instructions
+    lowercase with hyphens, at most 64 chars) and description (double-quoted, non-empty, at most 600 chars, with a
+    "Use ..." sentence and a "Not for ..." sentence); relative links in the body resolve; the body is under 500
+    lines, says that what the skill reads is untrusted data, not instructions, and has a "## Limits" section
+    before "## Related"
   * frontmatter scalars stay valid under strict YAML readers: a plain (unquoted) value must not contain ": " or
     " #", and a quoted value must be closed
   * every script referenced as ${CLAUDE_PLUGIN_ROOT}/skills/<skill>/scripts/<file> exists and is executable;
@@ -42,7 +43,7 @@ def warn(msg: str) -> None:
 
 
 def rel(p: Path) -> str:
-    return str(p.relative_to(ROOT))
+    return p.relative_to(ROOT).as_posix()
 
 
 def frontmatter(path: Path) -> dict[str, str] | None:
@@ -137,7 +138,7 @@ def check_frontmatter_scalars(path: Path, text: str) -> list[str]:
         value = m.group(1).strip()
         if not value or value[0] in "|>":
             continue
-        where = f"{rel(path) if path.is_relative_to(ROOT) else path}:{n}"
+        where = f"{rel(path) if path.is_relative_to(ROOT) else path.as_posix()}:{n}"
         if value[0] in "\"'":
             quote = value[0]
             i, closed = 1, False
@@ -161,6 +162,61 @@ def check_frontmatter_scalars(path: Path, text: str) -> list[str]:
     return problems
 
 
+DESCRIPTION_MAX = 600
+
+
+def scalar_value(raw: str) -> str:
+    """Return the value of a single-line YAML scalar as a reader sees it (quotes removed, escapes resolved)."""
+    raw = raw.strip()
+    if len(raw) >= 2 and raw[0] == raw[-1] == '"':
+        try:
+            return json.loads(raw)
+        except json.JSONDecodeError:
+            return raw[1:-1]
+    if len(raw) >= 2 and raw[0] == raw[-1] == "'":
+        return raw[1:-1].replace("''", "'")
+    return raw
+
+
+def check_description(raw: str) -> list[str]:
+    """Return the problems with a raw (as written) description value: quoting, length, when and when not."""
+    problems: list[str] = []
+    raw = raw.strip()
+    if not raw:
+        return ["frontmatter has no description"]
+    if not (len(raw) >= 2 and raw[0] == raw[-1] == '"'):
+        problems.append("description must be a double-quoted string")
+    desc = scalar_value(raw)
+    if not desc:
+        problems.append("frontmatter has no description")
+        return problems
+    if len(desc) > DESCRIPTION_MAX:
+        problems.append(f"description is {len(desc)} chars (max {DESCRIPTION_MAX})")
+    if not re.search(r"\bUse ", desc):
+        problems.append('description needs a "Use when ..." sentence')
+    if "Not for" not in desc:
+        problems.append('description needs a "Not for ..." sentence')
+    return problems
+
+
+def check_sections(body: str) -> list[str]:
+    """Return problems with the body's level-two sections: a Limits section must exist and precede Related."""
+    headings: list[str] = []
+    in_fence = False
+    for line in body.splitlines():
+        if line.lstrip().startswith("```"):
+            in_fence = not in_fence
+            continue
+        if not in_fence and line.startswith("## "):
+            headings.append(line[3:].strip())
+    if "Limits" not in headings:
+        return ['no "## Limits" section (say what it does not handle, what it does not check, and its network use)']
+    related = [i for i, h in enumerate(headings) if h.startswith("Related")]
+    if related and headings.index("Limits") > related[-1]:
+        return ['"## Limits" must come before "## Related"']
+    return []
+
+
 def check_skill(plugin_root: Path, skill_dir: Path) -> str | None:
     skill = skill_dir / "SKILL.md"
     if not skill.exists():
@@ -173,22 +229,20 @@ def check_skill(plugin_root: Path, skill_dir: Path) -> str | None:
     for problem in check_frontmatter_scalars(skill, skill.read_text(encoding="utf-8")):
         err(problem)
     name = fm.get("name", "")
-    desc = fm.get("description", "")
+    desc = scalar_value(fm.get("description", ""))
     if not name:
         err(f"{rel(skill)}: frontmatter has no name")
     elif name != skill_dir.name:
         err(f"{rel(skill)}: name {name!r} must equal directory name {skill_dir.name!r}")
     if name and (not re.match(r"^[a-z0-9]+(-[a-z0-9]+)*$", name) or len(name) > 64):
         err(f"{rel(skill)}: name must be lowercase letters, digits and single hyphens, at most 64 chars")
-    if not desc:
-        err(f"{rel(skill)}: frontmatter has no description")
-    elif len(desc) > 1024:
-        err(f"{rel(skill)}: description is {len(desc)} chars (max 1024)")
-    elif not re.search(r"\bUse (when|after|before)\b", desc) or not re.search(r"\bNot\b", desc):
-        warn(f"{rel(skill)}: description should say when to use it and when not to")
+    for problem in check_description(fm.get("description", "")):
+        err(f"{rel(skill)}: {problem}")
     if "compatibility" in fm and len(fm["compatibility"]) > 500:
         err(f"{rel(skill)}: compatibility over 500 chars")
     body = skill.read_text(encoding="utf-8")
+    for problem in check_sections(body):
+        err(f"{rel(skill)}: {problem}")
     if body.count("\n") > 500:
         err(f"{rel(skill)}: over 500 lines; move detail into references/")
     if not re.search(r"\buntrusted\b", body) or not re.search(r"not instructions|never follow|do not act on instructions", body):

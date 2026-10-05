@@ -4,6 +4,14 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-10-05
+
+### Changed
+
+- Rewrote five skill descriptions around a phrase a user would type and tightened four more; every description is now double-quoted, under 600 characters and has a "Use when" and a "Not for" sentence. Added a `## Limits` section to the 30 skills without one, boundary lines for skills that overlap with sibling packs, and search phrases to every README.
+- Scripts are safer on Windows: UTF-8 stdin, stdout and git output, report paths with forward slashes, LF checkouts via `.gitattributes`, and a `windows-latest` leg in the CI test matrix.
+- `scripts/validate_plugins.py` now fails on a description that is unquoted, over 600 characters or missing "Use" or "Not for", and on a skill without `## Limits` before `## Related`, with tests for each rule.
+
 ## [0.1.1] - 2026-10-04
 
 ### Changed

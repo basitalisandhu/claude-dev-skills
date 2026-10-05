@@ -45,7 +45,7 @@ def test_python_complexity_counts():
     import tempfile, pathlib
     with tempfile.TemporaryDirectory() as td:
         p = pathlib.Path(td) / "m.py"
-        p.write_text(PY)
+        p.write_text(PY, encoding="utf-8")
         rc, rep = run_json(mod, [str(p), "--json"])
     by = {f["name"]: f for f in rep["functions"]}
     assert by["simple"]["complexity"] == 1
