@@ -61,7 +61,7 @@ def test_unquoted_or_single_quoted_description_fails():
 
 
 def test_description_length_limit_counts_the_parsed_value():
-    body = "Use when asked. Not for that. "
+    body = 'Use when asked "is it ok?". Not for that. '
     at_limit = body + "x" * (vp.DESCRIPTION_MAX - len(body))
     assert vp.check_description(f'"{at_limit}"') == []
     problems = vp.check_description(f'"{at_limit}x"')
@@ -71,7 +71,19 @@ def test_description_length_limit_counts_the_parsed_value():
 def test_description_needs_use_and_not_for():
     assert any("Use when" in p for p in vp.check_description('"Check it. Not for that."'))
     assert any("Not for" in p for p in vp.check_description('"Check it. Use when asked. Not a linter."'))
-    assert vp.check_description('"Write it. Use after an outage. Not for bugs."') == []
+    assert vp.check_description('"Write it. Use when asked \\"what went wrong?\\". Not for bugs."') == []
+
+
+def test_description_needs_a_quoted_trigger_phrase_of_two_to_eight_words():
+    def phrase_problems(desc: str) -> list[str]:
+        return [p for p in vp.check_description(desc) if "trigger phrase" in p]
+
+    assert phrase_problems('"Check it. Use when asked. Not for that."')
+    assert phrase_problems('"Check it. Use when asked \\"flaky?\\". Not for that."')
+    assert phrase_problems('"Check it. Use when asked \\"one two three four five six seven eight nine\\". Not for that."')
+    assert phrase_problems('"Check it. Use when asked \\"is it flaky?\\". Not for that."') == []
+    assert phrase_problems('"Check it. Use when asked \\"one two three four five six seven eight\\". Not for that."') == []
+    assert vp.trigger_phrases('Use when asked "is it flaky?" or "slow".') == ["is it flaky?"]
 
 
 def test_empty_description_fails():

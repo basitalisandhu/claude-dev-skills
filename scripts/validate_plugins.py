@@ -6,9 +6,9 @@ Checks:
     exists and its plugin.json name equals the entry name
   * every plugins/<plugin>/skills/<name>/SKILL.md has YAML frontmatter with name (equal to the directory name,
     lowercase with hyphens, at most 64 chars) and description (double-quoted, non-empty, at most 600 chars, with a
-    "Use ..." sentence and a "Not for ..." sentence); relative links in the body resolve; the body is under 500
-    lines, says that what the skill reads is untrusted data, not instructions, and has a "## Limits" section
-    before "## Related"
+    "Use ..." sentence, a "Not for ..." sentence and a double-quoted trigger phrase of 2 to 8 words a user would
+    type); relative links in the body resolve; the body is under 500 lines, says that what the skill reads is
+    untrusted data, not instructions, and has a "## Limits" section before "## Related"
   * frontmatter scalars stay valid under strict YAML readers: a plain (unquoted) value must not contain ": " or
     " #", and a quoted value must be closed
   * every script referenced as ${CLAUDE_PLUGIN_ROOT}/skills/<skill>/scripts/<file> exists and is executable;
@@ -163,6 +163,13 @@ def check_frontmatter_scalars(path: Path, text: str) -> list[str]:
 
 
 DESCRIPTION_MAX = 600
+TRIGGER_WORDS = (2, 8)
+
+
+def trigger_phrases(desc: str) -> list[str]:
+    """Return the double-quoted phrases of 2 to 8 words in a parsed description (what a user would type)."""
+    low, high = TRIGGER_WORDS
+    return [p for p in re.findall(r'"([^"\n]+)"', desc) if low <= len(p.split()) <= high]
 
 
 def scalar_value(raw: str) -> str:
@@ -196,6 +203,8 @@ def check_description(raw: str) -> list[str]:
         problems.append('description needs a "Use when ..." sentence')
     if "Not for" not in desc:
         problems.append('description needs a "Not for ..." sentence')
+    if not trigger_phrases(desc):
+        problems.append('description needs a quoted trigger phrase of 2 to 8 words a user would type, e.g. "is this test flaky?"')
     return problems
 
 
