@@ -62,8 +62,8 @@ def test_baseline_roundtrip(write, tmp_path):
     base = tmp_path / "baseline.json"
     rc, out, _ = run_main(mod, [str(tmp_path), "--write-baseline", str(base)])
     assert rc == 0 and base.is_file()
-    data = json.loads(base.read_text())
-    assert len(data["fingerprints"]) == 1 and "xoxb" not in base.read_text()
+    data = json.loads(base.read_text(encoding="utf-8"))
+    assert len(data["fingerprints"]) == 1 and "xoxb" not in base.read_text(encoding="utf-8")
     rc, rep = run_json(mod, [str(tmp_path), "--json", "--baseline", str(base)])
     assert rc == 0 and rep["findings"] == [] and rep["suppressed_by_baseline"] == 1
     rc, _, err = run_main(mod, [str(tmp_path), "--baseline", str(tmp_path / "nope.json")])

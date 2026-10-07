@@ -1,6 +1,6 @@
 ---
 name: json-schema-author
-description: "Write a JSON Schema (draft 2020-12) for an API payload, configuration file or event by inferring a draft from sample documents with a bundled script (types, required fields, nullability, formats, enums, bounds) and then hand-finishing it: tightening constraints, adding descriptions and examples, and deciding additionalProperties and versioning. Use when asked to validate JSON, document a payload, or create a schema from examples. Not for OpenAPI documents as a whole (use api-contract-review) and not for XML or protobuf."
+description: "Write a JSON Schema (draft 2020-12) for an API payload, configuration file or event by inferring a draft from sample documents with a bundled script (types, required fields, nullability, formats, enums, bounds) and then hand-finishing it: tighter constraints, descriptions, examples, additionalProperties and versioning. Use when asked to \"write a JSON Schema\", to validate JSON, document a payload, or create a schema from examples. Not for OpenAPI documents as a whole (use api-contract-review) and not for XML or protobuf."
 license: MIT
 compatibility: Python 3.11 or newer on PATH as python3 for inference. A validator (python-jsonschema, ajv) is optional for the verification step.
 metadata:
@@ -58,6 +58,12 @@ Deliver the schema file plus a short note:
 **additionalProperties:** true (event payload; consumers must ignore unknown fields)
 **Fixtures:** tests/schema/valid/*.json (240), tests/schema/invalid/*.json (6), all behaving as expected with `jsonschema`
 ```
+
+## Limits
+
+- Inference sees only the samples: a field absent from them is missing from the draft, and `required`, `enum` and bounds may be coincidences until step 3 decides them.
+- Formats are detected only when every value matches (date, date-time, email, uuid, uri, ipv4); `oneOf`, discriminators and `pattern` are not inferred.
+- The script does not validate documents (use python-jsonschema or ajv) and makes no network calls; `$id` URLs are never fetched.
 
 ## Related
 

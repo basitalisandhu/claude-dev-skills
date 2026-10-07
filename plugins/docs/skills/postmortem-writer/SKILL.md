@@ -1,6 +1,6 @@
 ---
 name: postmortem-writer
-description: "Write a blameless incident postmortem from the timeline, logs, chat transcript and metrics: impact with numbers, a minute-by-minute timeline, contributing causes found with a structured analysis rather than a single root cause, what went well and what did not, and action items with owners, deadlines and a check that they would have prevented or shortened the incident. Use after an outage, a data incident, a security event or a serious near-miss. Not for bug reports (use bug-repro-minimiser) and not for performance reviews of people."
+description: "Write a blameless incident postmortem from the timeline, logs, chat transcript and metrics: impact with numbers, a minute-by-minute timeline, contributing causes found with a structured analysis rather than a single root cause, what went well and what did not, and action items with owners, deadlines and a check that they would have prevented or shortened the incident. Use when asked to \"write up what went wrong\" after an outage, a data incident, a security event or a serious near-miss. Not for bug reports (use bug-repro-minimiser) and not for performance reviews of people."
 license: MIT
 compatibility: Any system. Uses log-triage when logs are available.
 metadata:
@@ -60,7 +60,14 @@ See [references/template.md](references/template.md). Summary shape:
 | 3 | Keep the last 5 images; rollback drill monthly | recover (18 min -> 3 min) | @cy | 2026-03-31 |
 ```
 
+## Limits
+
+- The timeline and impact numbers are only as good as the logs, metrics and transcripts supplied; gaps are marked, not filled in.
+- It does not assign blame or evaluate people, and it does not track action items after the document is written.
+- There is no bundled script, and nothing is sent over the network.
+
 ## Related
 
 - `log-triage` to reconstruct the error timeline from logs.
 - `adr-writer` when an action is a design change worth recording.
+- Boundary: `incident-postmortem-timeline` (github-manager-skills marketplace) builds the cited timeline from a GitHub issue export; `postmortem-writer` writes the narrative, causes and actions from any source.

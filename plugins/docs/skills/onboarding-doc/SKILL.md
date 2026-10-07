@@ -1,6 +1,6 @@
 ---
 name: onboarding-doc
-description: "Write a developer onboarding document for a repository or service that gets a new team member from a clean machine to a merged change: environment setup verified step by step, how the code is organised, how to run and test it, the configuration it needs, the deployment path, who owns what, and the first tasks. Use when a project has no onboarding guide, when the last new joiner struggled, or before a team grows. Not for user-facing documentation (use readme-author) and not for HR onboarding."
+description: "Write a developer onboarding document that gets a new team member from a clean machine to a merged change: environment setup verified step by step, how the code is organised, how to run and test it, the configuration it needs, the deployment path, who owns what, and the first tasks. Use when asked to \"write an onboarding guide\", when a project has none, when the last new joiner struggled, or before a team grows. Not for user-facing documentation (use readme-author) and not for HR onboarding."
 license: MIT
 compatibility: Any project. Uses env-diff and test-gap-finder when installed for the configuration and testing sections.
 metadata:
@@ -53,7 +53,14 @@ A `docs/ONBOARDING.md` following [references/template.md](references/template.md
 7. First tasks: 4 issues, smallest first
 ```
 
+## Limits
+
+- Setup steps are verified only as far as the current machine allows; steps for other operating systems are marked unverified.
+- It covers the codebase and its setup, not company access requests or HR processes.
+- There is no bundled script; it runs only the project's own setup and test commands, which may download dependencies, and makes no other network calls.
+
 ## Related
 
 - `readme-author` for the public front door; the onboarding doc links to it rather than repeating it.
 - `env-diff` and `test-gap-finder` supply the configuration and test sections.
+- Boundary: `repo-onboarding-guide` (repo-engineering-skills marketplace) cites a path:line fact for every sentence and suits any repository it can read; `onboarding-doc` is the freehand version for teams and processes where no scripts can run.

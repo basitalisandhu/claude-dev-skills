@@ -9,6 +9,7 @@ from conftest import PLUGINS
 COPIES = [
     PLUGINS / "devops/skills/github-actions-author/scripts/_miniyaml.py",
     PLUGINS / "devops/skills/k8s-manifest-review/scripts/_miniyaml.py",
+    PLUGINS / "devops/skills/terraform-apply-gate/scripts/_miniyaml.py",
     PLUGINS / "data/skills/api-contract-review/scripts/_miniyaml.py",
 ]
 
@@ -24,7 +25,7 @@ yaml = _load()
 
 
 def test_copies_are_identical():
-    texts = {p.read_text() for p in COPIES}
+    texts = {p.read_text(encoding="utf-8") for p in COPIES}
     assert len(texts) == 1
 
 

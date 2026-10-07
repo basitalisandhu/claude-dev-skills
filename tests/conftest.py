@@ -73,6 +73,6 @@ def write(tmp_path: Path):
     def _write(rel: str, content: str) -> Path:
         p = tmp_path / rel
         p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(content, encoding="utf-8")
+        p.write_text(content, encoding="utf-8", newline="\n")  # identical bytes on every OS (no CRLF on Windows)
         return p
     return _write

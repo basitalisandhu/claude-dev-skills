@@ -31,12 +31,16 @@ All notable changes to this project are documented here.
 
 
 def test_github_show_formats_categories_and_compare_link(write):
-    f = write("CHANGELOG.md", CHANGELOG)
+    text = CHANGELOG.replace("### Fixed\n\n- A bug.", "### Added\n\n- Another feature.\n\n### Fixed\n\n- A bug.")
+    f = write("CHANGELOG.md", text)
     rc, out, _ = run_main(mod, ["show", "1.1.0", "--file", str(f), "--format", "github"])
     assert rc == 0
-    assert out == "**Fixed**\n\n- A bug.\n\nFull changelog: https://github.com/o/r/compare/v1.0.0...v1.1.0\n"
+    assert out == "**Added**\n\n- Another feature.\n\n**Fixed**\n\n- A bug.\n\nFull changelog: https://github.com/o/r/compare/v1.0.0...v1.1.0\n"
     rc, rep = run_json(mod, ["show", "1.1.0", "--file", str(f), "--format", "github", "--json"])
-    assert rc == 0 and rep["categories"] == [{"name": "Fixed", "entries": ["A bug."]}]
+    assert rc == 0 and rep["categories"] == [
+        {"name": "Added", "entries": ["Another feature."]},
+        {"name": "Fixed", "entries": ["A bug."]},
+    ]
 
 
 def test_github_show_without_link_has_no_trailing_compare_line(write):
@@ -63,7 +67,7 @@ def test_global_options_accepted_after_the_subcommand(write, tmp_path):
     rc, rep = run_json(mod, ["--json", "check", "--file", str(f)])
     assert rc == 0 and rep["ok"]
     rc, out, _ = run_main(mod, ["add", "Fixed", "A late fix.", "--file", str(f), "--dry-run"])
-    assert rc == 0 and "- A late fix." in out and "A late fix." not in f.read_text()
+    assert rc == 0 and "- A late fix." in out and "A late fix." not in f.read_text(encoding="utf-8")
 
 
 def test_check_reports_problems(write, tmp_path):
@@ -83,7 +87,7 @@ def test_add_and_release_rewrites_file(write, tmp_path):
     assert "### Added\n\n- A new thing.\n\n### Fixed\n\n- Crash on empty input.\n" in out
     rc, out, _ = run_main(mod, ["--file", str(f), "release", "1.2.0", "--date", "2026-02-01"])
     assert rc == 0
-    text = f.read_text()
+    text = f.read_text(encoding="utf-8")
     assert "## [Unreleased]\n\n## [1.2.0] - 2026-02-01\n\n### Added\n\n- A new thing." in text
     assert "[Unreleased]: https://github.com/o/r/compare/v1.2.0...HEAD" in text
     assert "[1.2.0]: https://github.com/o/r/compare/v1.1.0...v1.2.0" in text
@@ -99,7 +103,7 @@ def test_release_errors_and_dry_run(write, tmp_path):
     rc, _, err = run_main(mod, ["--file", str(f), "add", "bogus", "x"])
     assert rc == 2
     rc, out, _ = run_main(mod, ["--file", str(f), "--dry-run", "add", "Added", "y"])
-    assert rc == 0 and "- y" in out and "- y" not in f.read_text()
+    assert rc == 0 and "- y" in out and "- y" not in f.read_text(encoding="utf-8")
     rc, _, err = run_main(mod, ["--file", str(f), "release", "banana"])
     assert rc == 2
     rc, _, _ = run_main(mod, ["--file", str(tmp_path / "nope.md"), "check"])

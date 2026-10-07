@@ -1,6 +1,6 @@
 ---
 name: regex-builder
-description: "Build, explain and test regular expressions against labelled cases with a bundled script that reports which cases match, the captured groups, and warnings for patterns that can backtrack catastrophically, with timing on adversarial inputs. Use when asked to write a regex, to check why one does not match, to extract fields from text, or to review a regex used on untrusted input. Not for parsing structured formats (JSON, HTML, URLs: use a parser) and not for full-text search."
+description: "Write and test regular expressions that match what they should and nothing else: a bundled script runs a pattern against labelled cases, shows each match and captured group, and warns on patterns that can backtrack catastrophically, with timing on adversarial inputs. Use when asked to write a regex (phone numbers, dates, log lines), \"why does my pattern not match\", to extract fields from text, or to check a regex used on user input. Not for parsing structured formats (JSON, HTML, URLs: use a parser) and not for full-text search."
 license: MIT
 compatibility: Python 3.11 or newer on PATH as python3. Python re dialect; notes for JavaScript and PCRE differences included.
 metadata:
@@ -56,6 +56,12 @@ PATTERN = re.compile(r"""
 **Dialect notes:** JavaScript: use `(?<user>...)` and the `u` flag for unicode `\w`
 **Not covered on purpose:** full RFC 5322 (quoted local parts, IP literals); deliverability is verified by sending mail
 ```
+
+## Limits
+
+- The tester runs Python's `re` dialect; JavaScript, PCRE, Go and Rust differences are listed in step 5 but not executed.
+- The backtracking check is a heuristic: it flags known shapes and times a few adversarial inputs, so a pattern can pass and still be slow on input it did not try.
+- It makes no network calls.
 
 ## Related
 

@@ -15,8 +15,8 @@ Thank you for helping. This repository values precision over volume: a small num
 
 ## Adding a skill
 
-1. Pick the plugin it belongs to under `plugins/` and create `skills/<name>/SKILL.md`. The frontmatter needs `name` (equal to the directory name, lowercase with hyphens) and `description` (at most 1024 characters) that says what it does, when to use it, and when not to. Add `license`, `compatibility` and `metadata.author` like the others.
-2. Write the body in the house order: one-paragraph intro, "When to use it", "Procedure" (numbered steps, each with the command or the question), "Output format" (a concrete template), "Limits" when there is a script, "Related".
+1. Pick the plugin it belongs to under `plugins/` and create `skills/<name>/SKILL.md`. The frontmatter needs `name` (equal to the directory name, lowercase with hyphens) and `description`: a double-quoted string of at most 600 characters that starts with a verb, states the user's goal before the mechanism, quotes one phrase a user would type, and has a "Use when ..." sentence and a "Not for ..." sentence. Add `license`, `compatibility` and `metadata.author` like the others.
+2. Write the body in the house order: one-paragraph intro, "When to use it", "Procedure" (numbered steps, each with the command or the question), "Output format" (a concrete template), "Limits" (what it does not handle or check, and whether it contacts the network; every skill has one), "Related".
 3. Put long material in `references/` and executable helpers in `scripts/`. Reference scripts as `python3 "${CLAUDE_PLUGIN_ROOT}/skills/<name>/scripts/<file>.py"` so they resolve wherever the plugin is installed. Make scripts executable (`chmod +x`).
 4. Add tests under `tests/`, a row to the skill table in the root `README.md` and in the plugin's `README.md`, and a line under `Unreleased` in `CHANGELOG.md`.
 5. Run the checks below. All must pass.

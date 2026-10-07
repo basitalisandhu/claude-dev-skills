@@ -59,3 +59,70 @@ def test_classify():
     assert c("12") == "integer" and c("1,234") == "integer" and c("3.5") == "number" and c("1e5") == "number"
     assert c("2024-01-01") == "date" and c("2024-01-01T10:00:00Z") == "datetime" and c("yes") == "boolean"
     assert c("N/A") == "null" and c("hello") == "string"
+
+
+def test_crlf_with_bom(write, tmp_path):
+    content = "\ufeffid,name\r\n1,Ann\r\n2,Bob\r\n"
+    f = write("crlf_bom.csv", content)
+    rc, rep = run_json(mod, [str(f), "--json"])
+    assert rc == 0
+    assert rep["dialect"]["bom"] is True
+    assert rep["dialect"]["line_terminator"] == "CRLF"
+    assert [c["name"] for c in rep["columns"]] == ["id", "name"]
+    assert any("BOM" in w for w in rep["warnings"])
+
+
+def test_single_quoted(write, tmp_path):
+    content = "id,name\n1,'Ann, A'\n2,'Bob'\n"
+    f = write("squote.csv", content)
+    rc, rep = run_json(mod, [str(f), "--json"])
+    assert rc == 0
+    assert rep["dialect"]["quotechar"] == "'"
+    assert "doublequote" not in rep["dialect"]
+
+
+def test_doublequote_reported_only_when_escaped(write, tmp_path):
+    f1 = write("plain_quote.csv", 'id,name\n1,"Ann"\n2,"Bob"\n')
+    rc, rep1 = run_json(mod, [str(f1), "--json"])
+    assert rc == 0
+    assert "doublequote" not in rep1["dialect"]
+
+    f2 = write("escaped.csv", 'id,name\n1,"Ann ""A"" Smith"\n')
+    rc, rep2 = run_json(mod, [str(f2), "--json"])
+    assert rc == 0
+    assert rep2["dialect"]["doublequote"] is True
+
+    f3 = write("empty_field.csv", 'id,name,note\n1,"",x\n')
+    rc, rep3 = run_json(mod, [str(f3), "--json"])
+    assert rc == 0
+    assert "doublequote" not in rep3["dialect"]
+
+    # Unquoted inch mark is not an escape
+    f4 = write("inch.csv", 'id,note\n1,5" screen\n')
+    rc, rep4 = run_json(mod, [str(f4), "--json"])
+    assert rc == 0
+    assert "doublequote" not in rep4["dialect"]
+
+    # Single-quoted escape: 'it''s'
+    f5 = write("squote_escape.csv", "id,note\n1,'it''s'\n")
+    rc, rep5 = run_json(mod, [str(f5), "--json"])
+    assert rc == 0
+    assert rep5["dialect"]["doublequote"] is True
+
+
+def test_text_dialect_line(write, tmp_path):
+    f = write("plain.csv", "a,b\n1,2\n")
+    rc, out, _ = run_main(mod, [str(f)])
+    assert rc == 0
+    assert "dialect:" in out
+    assert "line_terminator=LF" in out
+    assert "bom=False" in out
+
+
+def test_mixed_line_endings(write, tmp_path):
+    content = "a,b\r\n1,2\n3,4\r\n"
+    f = write("mixed.csv", content)
+    rc, rep = run_json(mod, [str(f), "--json"])
+    assert rc == 0
+    assert rep["dialect"]["line_terminator"] == "mixed"
+    assert any("mixed line endings" in w for w in rep["warnings"])

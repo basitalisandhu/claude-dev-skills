@@ -1,16 +1,20 @@
 # claude-dev-skills
 
-**Claude Code skills for everyday development: code review, refactoring, debugging, CI and containers, data and APIs, documentation, and security basics. Forty skills in six plugins, each with a procedure, an output format and, where it helps, a tested standard-library script.**
+**Claude Code skills for everyday development: code review, refactoring, debugging, CI and containers, data and APIs, documentation, and security basics. Forty-two skills in six plugins, each with a procedure, an output format and, where it helps, a tested standard-library script.**
 
-claude-dev-skills is a Claude Code plugin marketplace for the work developers do every day: reviewing a pull request, finding why a test is flaky, hardening a Dockerfile, planning a schema migration, writing release notes, checking a token. Each skill is a fixed procedure with a concrete output, so two people (or two sessions) reach the same result and the evidence is a file, a line or a command output. Twenty-three skills bundle a Python script (standard library only, `--json` output, tested) that does the mechanical part; the rest bundle checklists and templates.
+claude-dev-skills is a Claude Code plugin marketplace for the work developers do every day: reviewing a pull request, finding why a test is flaky, hardening a Dockerfile, planning a schema migration, writing release notes, checking a token. Each skill is a fixed procedure with a concrete output, so two people (or two sessions) reach the same result and the evidence is a file, a line or a command output. Twenty-five skills bundle a Python script (standard library only, `--json` output, tested) that does the mechanical part; the rest bundle checklists and templates.
 
 No network access, no telemetry: scripts read the files you point them at and write only where you ask.
+
+Find this when you search for: code review checklist, tech debt, code smells, flaky tests, CI fails randomly, race condition, Docker image too big, zero-downtime migration, ReDoS, release notes, incident report, OWASP Top 10, npm audit fix, terraform plan policy, prevent terraform destroy, security review of a pull request.
 
 ## When to use this
 
 - Review this PR against a fixed checklist before merging: `review-checklist`
 - Which tests are flaky, and why: `flaky-test-hunter`
 - Is this Dockerfile, workflow or Kubernetes manifest safe to ship: `dockerfile-hardening`, `github-actions-author`, `k8s-manifest-review`
+- Can we apply this Terraform plan under our rules: `terraform-apply-gate`
+- What does this pull request add to the attack surface: `diff-security-review`
 - Change a column on a live table without downtime: `schema-migration-plan`
 - Turn a commit range into release notes and keep the changelog consistent: `release-notes`, `changelog-keeper`, `semver-advisor`
 - Did a secret get committed, what is in this JWT, are the headers right: `secrets-hygiene`, `jwt-inspector`, `http-security-headers`
@@ -51,7 +55,7 @@ plugins/<plugin>/
     ├── SKILL.md                    frontmatter (name, description with when and when not), procedure, output format
     ├── scripts/<name>.py           optional: argparse, --json, exit codes 0/1/2, standard library only
     └── references/*.md             optional: checklists, templates, per-tool notes
-tests/test_<script>.py              pytest for every script (23 scripts, 111 tests)
+tests/test_<script>.py              pytest for every script (25 scripts, 143 tests)
 scripts/validate_plugins.py         structure, frontmatter, scripts, READMEs and house style
 ```
 
@@ -88,7 +92,8 @@ scripts/validate_plugins.py         structure, frontmatter, scripts, READMEs and
 | `dockerfile-hardening` | "review this Dockerfile", "make the image smaller" | `dockerfile_lint.py` findings (17 rules) and a pinned, non-root, multi-stage Dockerfile |
 | `github-actions-author` | "add CI", "review our workflows", unpinned actions | `gha_lint.py` findings (permissions, pull_request_target, injection, pinning) and workflows from templates |
 | `k8s-manifest-review` | "review these manifests", "harden this pod spec" | `k8s_review.py` findings (16 rules) and manifests on the restricted baseline |
-| `terraform-review` | "review this Terraform", "is this plan safe to apply?" | checklist findings, plan reading (destroys and replacements), rules to automate |
+| `terraform-review` | "review this Terraform", a module before it ships | checklist findings, plan reading (destroys and replacements), rules to automate |
+| `terraform-apply-gate` | "can we apply this plan?", a pre-apply CI step or hook | `terraform_apply_gate.py` allow, ask or block verdict against a YAML policy (forbidden destroys, tags, replacement ceiling, protected names, providers) |
 | `cron-doctor` | "my cron job did not run", "ran twice" | `cron_doctor.py` schedule explanations, next runs, findings (12 rules), fixes and when to leave cron |
 | `env-diff` | "works locally, fails in staging", onboarding | `env_diff.py` missing, extra, empty and duplicate keys between a template and real env files, values never shown |
 | `release-notes` | "write the release notes", GitHub release body | `release_notes.py` grouped Markdown from a commit range, edited for readers with a migration section |
@@ -126,6 +131,7 @@ scripts/validate_plugins.py         structure, frontmatter, scripts, READMEs and
 | `jwt-inspector` | "what is in this token?", "is our JWT setup safe?" | `jwt_inspect.py` decoded claims (never verified) with findings; a review of issuer and verifier |
 | `cors-review` | a CORS error, "allow the frontend", a permissive policy | checklist findings and an allowlist configuration for the framework or gateway |
 | `auth-flow-review` | designing login, reviewing auth, an account takeover | per-flow findings with severity, corrected flows, attack tests for staging |
+| `diff-security-review` | "is this PR safe security-wise?", a pre-merge security pass | `diff_security_scan.py` findings on added lines only (network, shell, deserialisation, SQL strings, secrets, TLS off, permissions) with file and line, read in context |
 
 Deeper security work for LLM agents (threat modelling, agent configuration audits, prompt injection review, MCP server review) lives in the sibling marketplace [agent-security-skills](https://github.com/basitalisandhu/agent-security-skills).
 
@@ -143,12 +149,12 @@ Report security problems privately: see [SECURITY.md](SECURITY.md).
 
 ## Compatibility with agentskills.io
 
-Every `SKILL.md` follows the Agent Skills format: frontmatter with `name` (equal to the directory name) and `description` (at most 1024 characters, saying when to use the skill and when not to), optional `license`, `compatibility` and `metadata`, supporting files in `references/` and `scripts/`, and a body under 500 lines. Skill bodies reference `${CLAUDE_PLUGIN_ROOT}` for script paths; other hosts should substitute the skill's own directory.
+Every `SKILL.md` follows the Agent Skills format: frontmatter with `name` (equal to the directory name) and `description` (double-quoted, at most 600 characters here against the format's 1024, with a "Use when" and a "Not for" sentence), optional `license`, `compatibility` and `metadata`, supporting files in `references/` and `scripts/`, and a body under 500 lines. Skill bodies reference `${CLAUDE_PLUGIN_ROOT}` for script paths; other hosts should substitute the skill's own directory.
 
 ## Development
 
 ```bash
-python3 -m pytest -q                       # 111 tests across 23 scripts and the bundled YAML reader
+python3 -m pytest -q                       # 143 tests across 25 scripts, the bundled YAML reader and the validator
 python3 scripts/validate_plugins.py        # structure, frontmatter, scripts, READMEs, house style
 claude plugin validate --strict . && for p in plugins/*/; do claude plugin validate --strict "$p"; done
 ```
