@@ -73,3 +73,55 @@ def test_csp_details_and_errors(write, tmp_path):
     assert rc == 2 and "no headers" in err
     rc, out, _ = run_main(mod, [str(f)])
     assert rc == 1 and "grade" in out
+def test_har_input(write, tmp_path):
+    har = {
+        "log": {
+            "entries": [
+                {
+                    "request": {"url": "https://example.com/api"},
+                    "response": {
+                        "status": 200,
+                        "statusText": "OK",
+                        "httpVersion": "HTTP/1.1",
+                        "content": {"mimeType": "application/json"},
+                        "headers": [
+                            {"name": "Content-Type", "value": "application/json"},
+                            {"name": "Set-Cookie", "value": "a=1; Path=/"},
+                            {"name": "Set-Cookie", "value": "b=2; Path=/"}
+                        ]
+                    }
+                },
+                {
+                    "request": {"url": "https://example.com/"},
+                    "response": {
+                        "status": 200,
+                        "statusText": "OK",
+                        "httpVersion": "HTTP/2",
+                        "content": {"mimeType": "text/html"},
+                        "headers": [
+                            {"name": "Content-Type", "value": "text/html"}
+                        ]
+                    }
+                }
+            ]
+        }
+    }
+    f = write("test.har", json.dumps(har))
+    
+    # Default picks the HTML one (the second entry here)
+    rc, rep = run_json(mod, [str(f), "--json"])
+    assert rep["status"] == "HTTP/2 200 OK"
+    assert "content-type" in rep["headers_present"]
+    
+    # --url picks the first one
+    rc, rep = run_json(mod, [str(f), "--json", "--url", "https://example.com/api"])
+    assert rep["status"] == "HTTP/1.1 200 OK"
+    
+    # an entry list with duplicate set-cookie headers produces two cookie findings
+    # for the API entry, it has a=1 and b=2 without Secure/HttpOnly
+    cookies = [x for x in rep["findings"] if x["id"] == "HDR-007"]
+    assert len(cookies) >= 2
+    cookie_titles = [x["title"] for x in cookies]
+    assert any("Cookie a without" in t for t in cookie_titles)
+    assert any("Cookie b without" in t for t in cookie_titles)
+

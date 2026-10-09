@@ -41,12 +41,40 @@ SEVERITIES = ["critical", "high", "medium", "low", "info"]
 ONE_YEAR = 31536000
 
 
-def parse_response(text: str) -> tuple[dict[str, list[str]], str | None]:
+def parse_response(text: str, target_url: str | None = None) -> tuple[dict[str, list[str]], str | None]:
     """Return (headers as lower-name -> [values], status line)."""
     stripped = text.strip()
     if stripped.startswith("{"):
         doc = json.loads(stripped)
-        headers: dict[str, list[str]] = {}
+        if "log" in doc and isinstance(doc["log"], dict) and isinstance(doc["log"].get("entries"), list):
+            entries = doc["log"]["entries"]
+            entry = None
+            if target_url:
+                for e in entries:
+                    if e.get("request", {}).get("url") == target_url:
+                        entry = e
+                        break
+            else:
+                for e in entries:
+                    mime = e.get("response", {}).get("content", {}).get("mimeType", "")
+                    if mime.startswith("text/html"):
+                        entry = e
+                        break
+                if not entry and entries:
+                    entry = entries[0]
+            
+            if entry:
+                resp = entry.get("response", {})
+                headers: dict[str, list[str]] = {}
+                for h in resp.get("headers", []):
+                    headers.setdefault(h.get("name", "").strip().lower(), []).append(h.get("value", "").strip())
+                http_version = str(resp.get("httpVersion", ""))
+                http_v = http_version if http_version.upper().startswith("HTTP/") else f"HTTP/{http_version}"
+                status = f"{http_v} {resp.get('status', '')} {resp.get('statusText', '')}".strip()
+                return headers, status
+            return {}, None
+
+        headers = {}
         for k, v in doc.items():
             headers.setdefault(k.lower(), []).extend(v if isinstance(v, list) else [str(v)])
         return headers, None
@@ -186,13 +214,14 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0], formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("file", help="captured response ('-' for stdin)")
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--url", help="HAR only: select the entry matching this request.url")
     ap.add_argument("--http", action="store_true", help="the response was served over plain HTTP (skips HSTS and Secure-cookie checks)")
     ap.add_argument("--sensitive", action="store_true", help="the response carries personal or authenticated data")
     ap.add_argument("--fail-on", choices=SEVERITIES, default="high")
     args = ap.parse_args(argv)
     try:
         text = sys.stdin.read() if args.file == "-" else Path(args.file).read_text(encoding="utf-8", errors="replace")
-        headers, status = parse_response(text)
+        headers, status = parse_response(text, args.url)
     except (OSError, json.JSONDecodeError) as exc:
         print(f"error: cannot read response: {exc}", file=sys.stderr)
         return 2
