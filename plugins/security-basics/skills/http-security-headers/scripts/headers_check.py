@@ -61,7 +61,9 @@ def parse_response(text: str, target_url: str | None = None) -> tuple[dict[str, 
             else:
                 for e in entries:
                     if isinstance(e, dict):
-                        mime = ((e.get("response") or {}).get("content") or {}).get("mimeType", "")
+                        r = e.get("response")
+                        c = r.get("content") if isinstance(r, dict) else None
+                        mime = c.get("mimeType", "") if isinstance(c, dict) else ""
                         if isinstance(mime, str) and mime.startswith("text/html"):
                             entry = e
                             break
@@ -69,11 +71,17 @@ def parse_response(text: str, target_url: str | None = None) -> tuple[dict[str, 
                     entry = entries[0] if isinstance(entries[0], dict) else None
 
             if entry:
-                resp = entry.get("response") or {}
+                resp = entry.get("response")
+                if resp is None:
+                    resp = {}
+                if not isinstance(resp, dict):
+                    raise ValueError("HAR entry response must be an object")
                 headers: dict[str, list[str]] = {}
                 raw_headers = resp.get("headers")
                 if raw_headers is None:
                     raw_headers = []
+                if not isinstance(raw_headers, list):
+                    raise ValueError("HAR response.headers must be a list")
                 for h in raw_headers:
                     if isinstance(h, dict):
                         name = str(h.get("name") or "").strip().lower()

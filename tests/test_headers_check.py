@@ -160,3 +160,17 @@ def test_har_null_safe_and_errors(write, tmp_path):
     assert rc == 2
     assert "empty entries list in HAR" in err
 
+
+
+def test_har_bad_shapes_exit_2_without_traceback(write):
+    cases = {
+        "headers_number": ({"status": 200, "headers": 5}, "headers must be a list"),
+        "headers_object": ({"status": 200, "headers": {"a": "b"}}, "headers must be a list"),
+        "response_list": ([1, 2], "response must be an object"),
+    }
+    for name, (response, msg) in cases.items():
+        har = {"log": {"entries": [{"request": {"url": "https://example.com/"}, "response": response}]}}
+        f = write(f"{name}.har", json.dumps(har))
+        rc, _, err = run_main(mod, [str(f)])
+        assert rc == 2, name
+        assert msg in err and err.startswith("error:") and "Traceback" not in err, name
