@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [Unreleased]
 
+### Added
+
+- `http-security-headers`: `headers_check.py` reads a browser HAR export; it picks the first HTML response, or the entry given with `--url`, and exits 2 with a specific error for an empty or unmatched HAR. Thanks @Cid-oe (#11).
+
 ## [0.3.0] - 2026-10-09
 
 ### Added
