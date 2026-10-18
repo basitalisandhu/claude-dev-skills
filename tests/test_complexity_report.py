@@ -42,7 +42,8 @@ class C {
 
 
 def test_python_complexity_counts():
-    import tempfile, pathlib
+    import pathlib
+    import tempfile
     with tempfile.TemporaryDirectory() as td:
         p = pathlib.Path(td) / "m.py"
         p.write_text(PY, encoding="utf-8")
@@ -80,3 +81,20 @@ def test_summary_and_bad_path(write, tmp_path):
     assert rep["summary"]["max_complexity"] == 10
     rc, _, err = run_main(mod, [str(tmp_path / "missing")])
     assert rc == 2
+
+
+def test_unsupported_file_and_empty_tree_exit_2(write, tmp_path):
+    # a non-source file or an empty folder used to report "0 functions" with exit 0, which reads as a clean result
+    rc, out, err = run_main(mod, [str(write("notes.txt", "just some text\n"))])
+    assert rc == 2 and "not a supported source file" in err and out == ""
+    (tmp_path / "empty").mkdir()
+    write("empty/README.md", "# nothing to measure\n")
+    rc, out, err = run_main(mod, [str(tmp_path / "empty")])
+    assert rc == 2 and "no source files found" in err and out == ""
+
+
+def test_out_of_range_options_exit_2(write, tmp_path):
+    f = write("a.py", "def f():\n    return 1\n")
+    for opt, val, msg in [("--top", "-3", "1 or more"), ("--max-complexity", "0", "1 or more"), ("--max-length", "ten", "whole number")]:
+        rc, out, err = run_main(mod, [str(f), opt, val])
+        assert rc == 2 and msg in err and out == "", opt

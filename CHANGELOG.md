@@ -4,13 +4,30 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-18
+
 ### Fixed
 
 - `http-security-headers`: `headers_check.py` exits 2 with a clear error, instead of a traceback, when a HAR `response` is not an object or `response.headers` is not a list.
+- `dependency-audit-reader`: an empty file no longer reads as a clean pip-audit report (exit 0); empty, binary and non-JSON input, and a `--format` that does not fit the document, exit 2 with the reason instead of a traceback.
+- `dependency-audit-reader`: `--ignore GHSA-...` now works for npm 7 and later reports, whose advisories are keyed by a numeric source (the GHSA id is read from the advisory link), and a pip-audit alias such as a CVE id ignores the same advisory; a package stays listed while any advisory on it is not ignored. Transitive npm entries show the package they come through (`via minimist`), and the summary counts ignored packages.
+- `flaky-test-hunter`: XML that is not a JUnit report (a `pom.xml` in the same folder) is skipped instead of counting as a run, which had marked every test as present in only some runs; when no file is a readable report the script exits 2 instead of reporting "0 flaky" with exit 0, and a single usable run gets a warning.
+- `test-gap-finder`: a folder with no source modules (only entry points such as `app.py`, or nothing at all) exits 2 instead of reporting 100% and passing any `--min`; the summary counts the entry-point and config files it skipped, and a private module such as `_parser.py` matches `test_parser.py`.
+- `changelog-keeper`: a binary file exits 2 instead of a traceback.
+- `api-contract-review`, `github-actions-author`, `k8s-manifest-review`, `dockerfile-hardening`: empty, binary, plain-text or JSON-array input exits 2 with a readable reason; before, it exited 1 with a finding that showed a Python type name such as NoneType, or exited 0 with "0 findings".
+- `complexity-report`, `type-coverage`, `api-docs-from-code`: a non-source file or a folder with no source files exits 2 instead of a clean-looking "0 functions" report.
+- `regex-builder`: an empty or binary cases file exits 2 instead of "0 passed, 0 failed"; a pattern with no cases says only the backtracking check ran. `csv-profiler`, `cron-doctor`, `env-diff` and `log-triage` reject binary input, `env-diff` rejects a template with no keys, `log-triage` rejects empty input, and `release-notes` rejects `--input` text that has no records in the expected format.
+- Numeric options are range-checked (`--top`, `--max-complexity`, `--max-length`, `--min`, `--min-coverage`, `--min-runs`, `--next`, `--sample`, `--enum-max`, `--enum-min-samples`): a negative count or a percentage over 100 now exits 2 with a usage error instead of being accepted or read as a failed threshold.
 
 ### Added
 
 - `http-security-headers`: `headers_check.py` reads a browser HAR export; it picks the first HTML response, or the entry given with `--url`, and exits 2 with a specific error for an empty or unmatched HAR. Thanks @Cid-oe (#11).
+
+### Changed
+
+- `regex-builder` and `log-triage` descriptions reworded around how people ask ("extract the id and amount from lines like", "cluster the messages and tell me what to look at"); recall on the labelled trigger prompts rose from 0.80 to 1.00 for both, precision unchanged at 1.00.
+- The README has one "Exit codes" section for every script (0 clean, 1 findings at the threshold, 2 bad input or usage), and the code-quality, debugging and security-basics plugin READMEs show real output from `test_gap_finder.py`, `flaky_test_hunter.py` and `audit_reader.py`.
+- Tests rose from 154 to 202; every script now has at least six. `ruff check .` runs clean under a `[tool.ruff]` configuration in `pyproject.toml`.
 
 ## [0.3.0] - 2026-10-09
 
@@ -31,7 +48,6 @@ All notable changes to this project are documented here. The format follows Keep
 ### Added
 
 - csv-profiler: the dialect report now says whether quoted fields escape quotes by doubling them, and detects CRLF, BOM and mixed line endings (contributed by echomehran in #14, closes #8).
-
 - `terraform-apply-gate` (devops, script): checks a saved Terraform plan (`terraform show -json`) against a small YAML policy (forbidden destroys by resource type, required tags, a replacement and delete ceiling, protected names, allowed providers) and prints an allow, ask or block verdict with a reason per resource; exit 0 allow, 1 ask or block, 2 bad input.
 - `diff-security-review` (security-basics, script): scans the added lines of a saved `git diff` or `gh pr diff` for new network calls, shell and process execution, unsafe deserialisation, SQL built from strings, credential-shaped literals (redacted), disabled TLS checks and new permissions in workflows and manifests, with file and line, for a reader to judge in context.
 

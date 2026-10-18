@@ -57,3 +57,18 @@ def test_errors(write, tmp_path):
     e = write("empty.json", "  ")
     rc, _, err = run_main(mod, [str(e)])
     assert rc == 2
+
+
+def test_binary_sample_names_the_file(tmp_path):
+    b = tmp_path / "sample.json"
+    b.write_bytes(b"\x89PNG\r\n\x1a\n\x00\x00")
+    rc, out, err = run_main(mod, [str(b)])
+    assert rc == 2 and "sample.json" in err and "not UTF-8" in err and out == ""
+
+
+def test_negative_enum_options_exit_2(write, tmp_path):
+    f = write("a.json", '{"status": "paid"}')
+    rc, _, err = run_main(mod, [str(f), "--enum-max", "-1"])
+    assert rc == 2 and "0 or more" in err
+    rc, _, err = run_main(mod, [str(f), "--enum-min-samples", "0"])
+    assert rc == 2 and "1 or more" in err

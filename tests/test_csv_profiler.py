@@ -126,3 +126,19 @@ def test_mixed_line_endings(write, tmp_path):
     assert rc == 0
     assert rep["dialect"]["line_terminator"] == "mixed"
     assert any("mixed line endings" in w for w in rep["warnings"])
+
+
+def test_binary_file_exits_2_and_utf16_still_reads(tmp_path):
+    b = tmp_path / "image.csv"
+    b.write_bytes(b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR")
+    rc, out, err = run_main(mod, [str(b)])
+    assert rc == 2 and "binary file" in err and out == ""  # used to profile it with a "mixed line endings" warning
+    u = tmp_path / "wide.csv"
+    u.write_bytes("id,name\n1,a\n2,b\n".encode("utf-16"))
+    rc, out, err = run_main(mod, [str(u), "--encoding", "utf-16"])
+    assert rc == 0 and "name" in out
+
+
+def test_sample_must_be_positive(write):
+    rc, _, err = run_main(mod, [str(write("d.csv", "a,b\n1,2\n")), "--sample", "0"])
+    assert rc == 2 and "1 or more" in err

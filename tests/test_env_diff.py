@@ -49,3 +49,15 @@ def test_missing_files(write, tmp_path):
 def test_quoted_values_and_inline_comments():
     values, malformed, dups = mod.parse_env('A="hello # not comment"\nB=plain # comment\nC=\'x\'\n')
     assert values == {"A": "hello # not comment", "B": "plain", "C": "x"} and not malformed and not dups
+
+
+def test_empty_template_and_binary_files_exit_2(write, tmp_path):
+    real = write(".env", "DB_URL=x\n")
+    rc, out, err = run_main(mod, [str(write(".env.example", "# no keys yet\n")), str(real)])
+    assert rc == 2 and "declares no keys" in err and out == ""  # used to report every real key as extra
+    b = tmp_path / "blob.env"
+    b.write_bytes(b"\x89PNG\r\n\x1a\n\x00\x00")
+    rc, _, err = run_main(mod, [str(b), str(real)])
+    assert rc == 2 and "binary" in err
+    rc, _, err = run_main(mod, [str(write("t.env", "DB_URL=\n")), str(b)])
+    assert rc == 2 and "binary" in err

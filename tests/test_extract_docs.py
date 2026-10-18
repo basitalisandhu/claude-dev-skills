@@ -117,3 +117,19 @@ def test_syntax_error_and_missing_path(write, tmp_path):
     assert rc == 0 and "error" in rep["modules"][0]
     rc, _, _ = run_main(mod, [str(tmp_path / "nope")])
     assert rc == 2
+
+
+def test_unsupported_file_and_empty_tree_exit_2(write, tmp_path):
+    # a non-source file or an empty folder used to report "0 functions" with exit 0, which reads as a clean result
+    rc, out, err = run_main(mod, [str(write("notes.txt", "just some text\n"))])
+    assert rc == 2 and "not a supported source file" in err and out == ""
+    (tmp_path / "empty").mkdir()
+    write("empty/README.md", "# nothing to measure\n")
+    rc, out, err = run_main(mod, [str(tmp_path / "empty")])
+    assert rc == 2 and "no source files found" in err and out == ""
+
+
+def test_min_coverage_outside_percentage_range_exits_2(write, tmp_path):
+    f = write("a.py", '"""Module."""\n\ndef f():\n    """Do it."""\n')
+    rc, _, err = run_main(mod, [str(f), "--min-coverage", "200"])
+    assert rc == 2 and "between 0 and 100" in err  # used to exit 1 as if documentation were missing

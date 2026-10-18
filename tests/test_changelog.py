@@ -108,3 +108,10 @@ def test_release_errors_and_dry_run(write, tmp_path):
     assert rc == 2
     rc, _, _ = run_main(mod, ["--file", str(tmp_path / "nope.md"), "check"])
     assert rc == 2
+
+
+def test_binary_file_exits_2_without_traceback(tmp_path):
+    f = tmp_path / "CHANGELOG.md"
+    f.write_bytes(b"\x89PNG\r\n\x1a\n\x00\x00")
+    rc, out, err = run_main(mod, ["--file", str(f), "check"])
+    assert rc == 2 and "not UTF-8" in err and out == ""

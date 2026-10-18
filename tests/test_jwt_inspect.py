@@ -60,3 +60,11 @@ def test_not_a_jwt_and_bad_now():
     t = token({"alg": "RS256"}, {"exp": NOW_TS})
     rc, _, err = run_main(mod, [t, "--now", "yesterday"])
     assert rc == 2
+
+
+def test_token_from_stdin_with_trailing_newline(monkeypatch):
+    import io
+    t = token({"alg": "RS256", "typ": "JWT", "kid": "k"}, {"iss": "https://i.example", "aud": "api", "sub": "u", "iat": NOW_TS - 60, "exp": NOW_TS + 600})
+    monkeypatch.setattr("sys.stdin", io.StringIO(t + "\n"))
+    rc, rep = run_json(mod, ["-", "--json", "--now", NOW])
+    assert rc == 0 and rep["payload"]["sub"] == "u" and rep["verified"] is False

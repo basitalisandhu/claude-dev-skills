@@ -3,7 +3,6 @@ import importlib.util
 import math
 
 import pytest
-
 from conftest import PLUGINS
 
 COPIES = [

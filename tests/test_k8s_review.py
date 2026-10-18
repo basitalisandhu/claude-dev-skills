@@ -125,5 +125,25 @@ def test_errors(write, tmp_path):
     rc, _, _ = run_main(mod, [str(tmp_path / "nope")])
     assert rc == 2
     f = write("empty.yaml", "")
-    rc, out, _ = run_main(mod, [str(f)])
-    assert rc == 0 and "0 objects" in out
+    rc, _, err = run_main(mod, [str(f)])
+    assert rc == 2 and "no Kubernetes objects" in err
+
+
+def test_files_without_kubernetes_objects_exit_2(write, tmp_path):
+    # used to print "0 objects, 0 findings" and exit 0, which reads as a clean review
+    for name, content in [("empty.yaml", ""), ("list.json", "[1, 2, 3]"), ("notes.yaml", "just some text\n")]:
+        rc, out, err = run_main(mod, [str(write(name, content))])
+        assert rc == 2 and "no Kubernetes objects found" in err and out == "", name
+    b = tmp_path / "bin.yaml"
+    b.write_bytes(b"\x89PNG\r\n\x1a\n\x00\x00")
+    rc, out, _ = run_main(mod, [str(b)])
+    assert rc == 2 and "binary file" in out
+
+
+def test_json_manifest_is_reviewed_like_yaml(write):
+    import json
+    pod = {"apiVersion": "v1", "kind": "Pod", "metadata": {"name": "p", "namespace": "app"},
+           "spec": {"containers": [{"name": "c", "image": "nginx:latest", "securityContext": {"privileged": True}}]}}
+    rc, rep = run_json(mod, [str(write("pod.json", json.dumps(pod))), "--json"])
+    assert rc == 1 and rep["objects"] == 1 and rep["findings"]
+    assert all(f["object"] == "Pod/p" for f in rep["findings"])

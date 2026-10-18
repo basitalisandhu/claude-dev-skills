@@ -88,3 +88,17 @@ def test_parser_handles_continuations_and_heredocs():
     assert [i["instruction"] for i in ins] == ["FROM", "RUN", "RUN", "CMD"]
     assert "echo two" in ins[1]["args"] and ins[1]["line"] == 2
     assert "echo hi" in ins[2]["args"]
+
+
+def test_files_that_are_not_dockerfiles_exit_2(write, tmp_path):
+    # empty, JSON and plain-text files used to report "0 findings" and exit 0, which reads as a clean Dockerfile
+    for name, content in [("empty", ""), ("data.json", '{"FROM": "x"}\n'), ("notes.txt", "just some text\n")]:
+        rc, out, err = run_main(mod, [str(write(name, content))])
+        assert rc == 2 and "no FROM instruction" in err and out == "", name
+    b = tmp_path / "Dockerfile.bin"
+    b.write_bytes(b"\x89PNG\r\n\x1a\n\x00\x00")
+    rc, _, err = run_main(mod, [str(b)])
+    assert rc == 2 and "binary" in err
+    ok = write("Dockerfile", "ARG BASE=python:3.12-slim\nFROM ${BASE}\nUSER app\n")
+    rc, _, err = run_main(mod, [str(ok)])
+    assert rc in (0, 1) and err == ""  # ARG before FROM is still a Dockerfile

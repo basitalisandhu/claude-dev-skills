@@ -238,7 +238,6 @@ def check_skill(plugin_root: Path, skill_dir: Path) -> str | None:
     for problem in check_frontmatter_scalars(skill, skill.read_text(encoding="utf-8")):
         err(problem)
     name = fm.get("name", "")
-    desc = scalar_value(fm.get("description", ""))
     if not name:
         err(f"{rel(skill)}: frontmatter has no name")
     elif name != skill_dir.name:

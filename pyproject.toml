@@ -1,3 +1,16 @@
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-p no:cacheprovider"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 160
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+# Long regular expressions and table rows read better on one line; the tests check behaviour, not width.
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# Left as contributed in #23; switch to zip(..., strict=False) in a follow-up that touches this file.
+"plugins/code-quality/skills/dead-code-finder/scripts/dead_code_finder.py" = ["B905"]
