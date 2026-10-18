@@ -22,6 +22,62 @@ def test_skips_private_dunder_decorated_and_all_exports(write, tmp_path):
     assert {f["name"] for f in rep["findings"]} == {"_private"}
 
 
+def test_commonjs_exports_report_only_unrequired_names(write, tmp_path):
+    write(
+        "lib/util.cjs",
+        "function usedHelper() {}\nfunction unusedHelper() {}\nmodule.exports = { usedHelper, unusedHelper };\n",
+    )
+    write("app/main.js", "const { usedHelper } = require('../lib/util');\nusedHelper();\n")
+    rc, rep = run_json(mod, [str(tmp_path), "--json"])
+    assert rc == 0
+    names = {f["name"] for f in rep["findings"]}
+    assert names == {"unusedHelper"}
+
+
+def test_multiline_module_exports_report_each_key_line(write, tmp_path):
+    write(
+        "lib/util.cjs",
+        "function first() {}\nfunction second() {}\nmodule.exports = {\n  first,\n  second,\n};\n",
+    )
+    write("app/main.js", "const { first } = require('../lib/util');\nfirst();\n")
+    rc, rep = run_json(mod, [str(tmp_path), "--json"])
+    assert rc == 0
+    lines = {f["name"]: f["line"] for f in rep["findings"]}
+    # Each key is on its own line, not all on the opening brace.
+    assert lines == {"second": 5}
+
+
+def test_module_exports_dot_and_exports_dot(write, tmp_path):
+    write("a.cjs", "function a() {}\nmodule.exports.a = a;\n")
+    write("b.cjs", "function b() {}\nexports.b = b;\n")
+    rc, rep = run_json(mod, [str(tmp_path), "--json"])
+    assert rc == 0
+    assert {f["name"] for f in rep["findings"]} == {"a", "b"}
+
+
+def test_module_exports_object_with_inline_function_values(write, tmp_path):
+    # A `}` inside a value must not end the object scan, or later keys vanish.
+    write(
+        "lib/util.cjs",
+        "module.exports = {\n  a: function () { return 1; },\n  b,\n  c: x,\n};\n",
+    )
+    rc, rep = run_json(mod, [str(tmp_path), "--json"])
+    assert rc == 0
+    lines = {f["name"]: f["line"] for f in rep["findings"]}
+    assert lines == {"a": 2, "b": 3, "c": 4}
+
+
+def test_module_exports_object_skips_spread_and_computed_keys(write, tmp_path):
+    write(
+        "lib/util.cjs",
+        "module.exports = {\n  helper() { return 2; },\n  nested: { deep: 1 },\n  ...rest,\n  [k]: 1,\n  plain,\n};\n",
+    )
+    rc, rep = run_json(mod, [str(tmp_path), "--json"])
+    assert rc == 0
+    names = {f["name"] for f in rep["findings"]}
+    assert names == {"helper", "nested", "plain"}
+
+
 def test_javascript_exports_without_importers_are_reported(write, tmp_path):
     write("src/a.ts", "export function usedFn() {}\nexport const unusedConst = 1;\nexport class UnusedClass {}\nexport { usedFn as alias, other };\nconst other = 2;\n")
     write("src/b.ts", "import { usedFn, alias } from './a';\nusedFn(); alias();\n")
