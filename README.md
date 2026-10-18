@@ -55,7 +55,7 @@ plugins/<plugin>/
     ├── SKILL.md                    frontmatter (name, description with when and when not), procedure, output format
     ├── scripts/<name>.py           optional: argparse, --json, exit codes 0/1/2, standard library only
     └── references/*.md             optional: checklists, templates, per-tool notes
-tests/test_<script>.py              pytest for every script (25 scripts, 143 tests)
+tests/test_<script>.py              pytest for every script (25 scripts, 202 tests)
 scripts/validate_plugins.py         structure, frontmatter, scripts, READMEs and house style
 ```
 
@@ -135,6 +135,37 @@ scripts/validate_plugins.py         structure, frontmatter, scripts, READMEs and
 
 Deeper security work for LLM agents (threat modelling, agent configuration audits, prompt injection review, MCP server review) lives in the sibling marketplace [agent-security-skills](https://github.com/basitalisandhu/agent-security-skills).
 
+## Exit codes
+
+Every bundled script uses the same three exit codes and prints its checks and options with `--help`:
+
+- **0**: the run finished and nothing reached the threshold (or the script only reports, such as a profile summary).
+- **1**: findings at or over the threshold, or a failed check, as listed below.
+- **2**: bad input or usage: a missing path, an empty, binary or wrong-format file (for example a JSON array where a mapping is expected, or a folder with no files of the expected type), an unknown option or an invalid value. The reason is printed with the error (on standard error, or in the report next to a file that does not parse), so a wrong file never reads as a clean result. One exception for now: `dead_code_finder.py` still reports an empty folder or a non-source file as 0 candidates with exit 0.
+
+| Script | Exit 1 means |
+|---|---|
+| `complexity_report.py` | a function over `--max-complexity` or `--max-length` |
+| `dead_code_finder.py` | candidates found, with `--fail-on-findings` |
+| `test_gap_finder.py` | the share of modules with a test is below `--min` |
+| `type_coverage.py` | annotated share below `--min` |
+| `csv_profiler.py` | data-quality warnings, with `--strict` |
+| `json_schema_infer.py` | not used (0 or 2) |
+| `regex_tester.py` | a labelled case failed or a backtracking warning fired |
+| `openapi_lint.py` | a finding at or above `--fail-on` (default error) |
+| `flaky_test_hunter.py` | flaky tests, with `--fail-on-flaky` |
+| `log_triage.py` | a cluster at or above `--fail-on-level` |
+| `perf_profile_reader.py` | not used (0 or 2) |
+| `dockerfile_lint.py`, `gha_lint.py`, `k8s_review.py` | a finding at or above `--fail-on` (default high) |
+| `cron_doctor.py` | at least one CRON error |
+| `env_diff.py` | missing keys, or extra keys without `--allow-extra` |
+| `terraform_apply_gate.py` | verdict ask or block |
+| `release_notes.py` | not used (0 or 2) |
+| `extract_docs.py` | documentation coverage below `--min-coverage` |
+| `changelog.py` | `check` found problems, or `release` had nothing to release |
+| `audit_reader.py`, `headers_check.py`, `jwt_inspect.py`, `secrets_scan.py` | a finding at or above `--fail-on` (default high) |
+| `diff_security_scan.py` | a finding at or above `--fail-on` (default low) |
+
 ## Security posture
 
 What each component can touch, so you can decide before you install:
@@ -154,7 +185,7 @@ Every `SKILL.md` follows the Agent Skills format: frontmatter with `name` (equal
 ## Development
 
 ```bash
-python3 -m pytest -q                       # 143 tests across 25 scripts, the bundled YAML reader and the validator
+python3 -m pytest -q                       # 202 tests across 25 scripts, the bundled YAML reader and the validator
 python3 scripts/validate_plugins.py        # structure, frontmatter, scripts, READMEs, house style
 claude plugin validate --strict . && for p in plugins/*/; do claude plugin validate --strict "$p"; done
 ```

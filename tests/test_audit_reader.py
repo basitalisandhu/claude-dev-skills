@@ -60,3 +60,54 @@ def test_ignore_text_and_errors(write, tmp_path):
     f3 = write("odd.json", json.dumps({"hello": "world"}))
     rc, _, err = run_main(mod, [str(f3)])
     assert rc == 2 and "unrecognised" in err
+
+
+def test_empty_binary_and_non_json_input_exit_2(write, tmp_path):
+    empty = write("empty.json", "")
+    rc, out, err = run_main(mod, [str(empty)])
+    assert rc == 2 and "is empty" in err and out == ""  # used to read as an empty pip-audit report and exit 0
+    binary = tmp_path / "audit.bin"
+    binary.write_bytes(b"\x89PNG\r\n\x1a\n\x00\x00")
+    rc, _, err = run_main(mod, [str(binary)])
+    assert rc == 2 and "not UTF-8" in err and "Traceback" not in err
+    csv = write("audit.csv", "package,severity\nlodash,high\n")
+    rc, _, err = run_main(mod, [str(csv)])
+    assert rc == 2 and "not audit JSON" in err
+
+
+def test_forced_format_on_wrong_shape_exits_2(write):
+    f = write("list.json", "[1, 2, 3]")
+    rc, _, err = run_main(mod, [str(f), "--format", "npm"])
+    assert rc == 2 and "shape of a npm report" in err
+    rc, _, err = run_main(mod, [str(f)])
+    assert rc == 2 and "unrecognised" in err
+
+
+def test_ignore_by_ghsa_id_for_npm7_and_by_alias_for_pip(write):
+    npm = {"vulnerabilities": {"lodash": {"name": "lodash", "severity": "high", "isDirect": True, "fixAvailable": True,
+                                           "via": [{"source": 1096, "title": "Prototype Pollution", "severity": "high",
+                                                    "url": "https://github.com/advisories/GHSA-35jh-r3h4-6jhm"}]}}}
+    f = write("npm.json", json.dumps(npm))
+    rc, rep = run_json(mod, [str(f), "--json"])
+    assert rep["items"][0]["ids"] == ["1096", "GHSA-35jh-r3h4-6jhm"]
+    rc, rep = run_json(mod, [str(f), "--json", "--ignore", "ghsa-35jh-r3h4-6jhm"])
+    assert rc == 0 and rep["vulnerable_packages"] == 0 and rep["ignored_packages"] == 1
+    f2 = write("pip.json", json.dumps(PIP))
+    rc, rep = run_json(mod, [str(f2), "--json", "--fail-on", "info", "--ignore", "CVE-2023-32681"])
+    assert rc == 0 and rep["vulnerable_packages"] == 0  # the alias names the same advisory as PYSEC-2023-74
+
+
+def test_ignore_keeps_a_package_with_another_open_advisory(write):
+    pip = [{"name": "jinja2", "version": "2.0", "vulns": [{"id": "PYSEC-1", "fix_versions": ["2.1"], "severity": "high"},
+                                                          {"id": "PYSEC-2", "fix_versions": ["2.2"], "severity": "high"}]}]
+    f = write("pip.json", json.dumps(pip))
+    rc, rep = run_json(mod, [str(f), "--json", "--ignore", "PYSEC-1"])
+    assert rc == 1 and rep["vulnerable_packages"] == 1 and rep["ignored_packages"] == 0
+
+
+def test_transitive_npm7_entry_names_the_package_it_comes_through(write):
+    f = write("npm.json", json.dumps(NPM7))
+    rc, rep = run_json(mod, [str(f), "--json"])
+    assert {i["package"]: i for i in rep["items"]}["mkdirp"]["via"] == ["minimist"]
+    rc, out, _ = run_main(mod, [str(f)])
+    assert "via minimist" in out

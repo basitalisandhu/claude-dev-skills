@@ -56,3 +56,17 @@ def test_normalise_examples():
     assert n("user 42 logged in from 192.168.1.1 at 2026-01-02 10:00:00") == "user <n> logged in from <ip> at <ts>"
     assert n('key "abc" path /var/log/app.log hex 0xdeadbeef') == "key <str> path <path> hex <hex>"
     assert n("sent mail to a.b@example.com via https://smtp.example.com/x") == "sent mail to <email> via <url>"
+
+
+def test_empty_and_binary_input_exit_2(write, tmp_path):
+    rc, out, err = run_main(mod, [str(write("empty.log", "\n\n"))])
+    assert rc == 2 and "no log lines" in err and out == ""  # used to print empty tables and exit 0
+    b = tmp_path / "app.log.gz"
+    b.write_bytes(b"\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\x03binary")
+    rc, _, err = run_main(mod, [str(b)])
+    assert rc == 2 and "binary" in err and "decompress" in err
+
+
+def test_top_must_be_positive(write):
+    rc, _, err = run_main(mod, [str(write("a.log", "ERROR boom\n")), "--top", "-1"])
+    assert rc == 2 and "1 or more" in err

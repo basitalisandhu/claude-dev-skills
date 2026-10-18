@@ -99,3 +99,15 @@ def test_text_output_mentions_fix(write, tmp_path):
     f = write("bad.yml", BAD)
     rc, out, _ = run_main(mod, [str(f)])
     assert rc == 1 and "fix:" in out and "GHA-003" in out
+
+
+def test_non_workflow_files_exit_2_with_a_readable_reason(write, tmp_path):
+    # used to exit 1 with a GHA-000 finding whose evidence was a Python type name such as NoneType
+    for name, content, reason in [("empty.yml", "", "top level is empty"), ("list.yml", "- a\n- b\n", "top level is a list"),
+                                  ("notes.yml", "just some text\n", "top level is plain text")]:
+        rc, out, _ = run_main(mod, [str(write(name, content))])
+        assert rc == 2 and reason in out and "NoneType" not in out, name
+    b = tmp_path / "bin.yml"
+    b.write_bytes(b"\x89PNG\r\n\x1a\n\x00\x00")
+    rc, out, _ = run_main(mod, [str(b)])
+    assert rc == 2 and "binary file" in out

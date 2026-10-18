@@ -72,3 +72,15 @@ def test_text_output_and_bad_inputs(write, tmp_path):
     assert rc == 2
     rc, _, err = run_main(mod, [str(f), "--now", "not-a-date"])
     assert rc == 2
+
+
+def test_binary_input_exits_2(tmp_path):
+    b = tmp_path / "crontab.bin"
+    b.write_bytes(b"\x89PNG\r\n\x1a\n\x00\x00")
+    rc, out, err = run_main(mod, [str(b)])
+    assert rc == 2 and "binary file" in err and out == ""  # used to report CRON-001 errors per garbage line
+
+
+def test_negative_next_exits_2(write):
+    rc, _, err = run_main(mod, [str(write("c.cron", "0 3 * * * /bin/true\n")), "--next", "-2"])
+    assert rc == 2 and "0 or more" in err

@@ -47,3 +47,20 @@ def test_bad_pattern_cases_and_flags(write, tmp_path):
     assert rc == 2 and "line 1" in err
     rc, _, err = run_main(mod, ["x", "--cases", str(tmp_path / "nope")])
     assert rc == 2
+
+
+def test_empty_or_binary_cases_file_exits_2(write, tmp_path):
+    # an empty cases file used to report "0 passed, 0 failed" and exit 0, a silent pass
+    rc, out, err = run_main(mod, ["a", "--cases", str(write("cases.txt", "# only a comment\n\n"))])
+    assert rc == 2 and "has no cases" in err and out == ""
+    b = tmp_path / "cases.bin"
+    b.write_bytes(b"\x89PNG\r\n\x1a\n\x00\x00")
+    rc, _, err = run_main(mod, ["a", "--cases", str(b)])
+    assert rc == 2 and "not UTF-8" in err and "cases.bin" in err
+
+
+def test_pattern_alone_runs_only_the_backtracking_check_and_says_so(write):
+    rc, out, _ = run_main(mod, [r"\d+"])
+    assert rc == 0 and "no cases given" in out
+    rc, out, _ = run_main(mod, [r"^(a+)+$"])
+    assert rc == 1 and "warning:" in out

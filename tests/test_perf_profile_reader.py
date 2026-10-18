@@ -83,3 +83,11 @@ def test_unrecognised_and_missing(write, tmp_path):
     assert rc == 2
     rc, _, err = run_main(mod, [str(f), "--format", "pprof"])
     assert rc == 2 and "no rows" in err
+
+
+def test_top_must_be_positive_and_forced_format_mismatch_exits_2(write, tmp_path):
+    f = write("p.txt", "main;work 10\nmain;idle 5\n")
+    rc, _, err = run_main(mod, [str(f), "--top", "0"])
+    assert rc == 2 and "1 or more" in err
+    rc, _, err = run_main(mod, [str(f), "--format", "pprof"])
+    assert rc == 2 and "pprof" in err

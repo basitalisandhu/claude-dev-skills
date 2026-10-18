@@ -47,9 +47,12 @@ def test_env_file_not_ignored_and_example_ok(write, tmp_path):
     (other / "sub").mkdir(parents=True)
     (other / "sub" / ".env").write_text("SECRET=hello\n", encoding="utf-8")
     rc, rep2 = run_json(mod, [str(other), "--json"])
-    fp = lambda rep: {f["fingerprint"] for f in rep["findings"] if f["rule"] == "env-file-not-ignored"}
+    def fp(rep):
+        return {f["fingerprint"] for f in rep["findings"] if f["rule"] == "env-file-not-ignored"}
+
     assert fp(rep) and fp(rep) != fp(rep2)
-    (other / "sub" / ".env").unlink(); (other / ".env").write_text("SECRET=hello\n", encoding="utf-8")
+    (other / "sub" / ".env").unlink()
+    (other / ".env").write_text("SECRET=hello\n", encoding="utf-8")
     rc, rep3 = run_json(mod, [str(other), "--json"])
     assert fp(rep3) == fp(rep)
     write(".gitignore", ".env\n")
@@ -82,3 +85,13 @@ def test_clean_tree_fail_on_and_missing_path(write, tmp_path):
 def test_entropy_and_redact():
     assert mod.entropy("aaaa") == 0.0 and mod.entropy(HIGH_ENTROPY) > 3.5
     assert mod.redact("abcdefghijklmnop") == "abcd************"
+
+
+def test_binary_files_skipped_and_excluded_dirs_ignored(write, tmp_path):
+    (tmp_path / "logo.png").write_bytes(b"\x89PNG\r\n\x1a\n\x00\x00" + FAKE_GITHUB_TOKEN.encode())
+    write("thirdparty/lib.py", f"T = '{FAKE_GITHUB_TOKEN}'\n")
+    rc, rep = run_json(mod, [str(tmp_path), "--json", "--exclude", "thirdparty"])
+    assert rc == 0 and rep["findings"] == []
+    rc, rep = run_json(mod, [str(tmp_path), "--json"])
+    assert rc == 1 and [f["file"] for f in rep["findings"]] == ["thirdparty/lib.py"]
+    assert FAKE_GITHUB_TOKEN not in json.dumps(rep)

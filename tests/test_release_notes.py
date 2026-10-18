@@ -3,7 +3,6 @@ import shutil
 import subprocess
 
 import pytest
-
 from conftest import load_script, run_json, run_main
 
 mod = load_script("devops", "release-notes", "release_notes.py")
@@ -71,3 +70,26 @@ def test_runs_git_log_locally(tmp_path):
     assert [s["key"] for s in notes["sections"]] == ["feat", "fix"]
     rc, _, err = run_main(mod, ["--repo", str(tmp_path / "not-a-repo")])
     assert rc == 2
+
+
+def test_input_in_the_wrong_format_exits_2(write, tmp_path):
+    # a plain `git log` or a JSON file used to produce "No changes in this range." with exit 0
+    plain = write("plain.log", "commit 1234abcd\nAuthor: A <a@x>\n\n    fix: crash\n")
+    rc, out, err = run_main(mod, ["--input", str(plain)])
+    assert rc == 2 and out == "" and "no commit records" in err and "--format=" in err
+    rc, _, err = run_main(mod, ["--input", str(write("x.json", '{"commits": []}'))])
+    assert rc == 2
+
+
+def test_issue_references_and_keyword_classification(write):
+    log = "".join("\x1f".join(parts) + "\x1e" for parts in [
+        ("a1", "Ann", "2026-01-02", "Add CSV export", "Closes #41"),
+        ("b2", "Bob", "2026-01-03", "Fix rounding in totals (#42)", ""),
+        ("c3", "Cy", "2026-01-04", "Update README for setup", "Refs PAY-7"),
+    ])
+    rc, rep = run_json(mod, ["--input", str(write("log.txt", log)), "--json"])
+    assert rc == 0 and rep["commits"] == 3
+    keys = {e["sha"]: s["key"] for s in rep["sections"] for e in s["entries"]}
+    assert keys == {"a1": "feat", "b2": "fix", "c3": "docs"}  # classified by subject keyword without a prefix
+    entries = {e["sha"]: e for s in rep["sections"] for e in s["entries"]}
+    assert entries["a1"]["issues"] == ["41"] and entries["b2"]["issues"] == ["42"] and entries["c3"]["issues"] == ["PAY-7"]

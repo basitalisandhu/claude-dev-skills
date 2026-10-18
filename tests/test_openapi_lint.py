@@ -104,3 +104,20 @@ def test_errors(write, tmp_path):
     f2 = write("swagger.yaml", "swagger: '2.0'\ninfo: {title: x, version: '1'}\npaths: {}\n")
     rc, rep = run_json(mod, [str(f2), "--json"])
     assert rc == 1 and any("Not an OpenAPI 3.x" in x["title"] for x in rep["findings"])
+
+
+def test_empty_and_binary_files_exit_2(write, tmp_path):
+    rc, out, err = run_main(mod, [str(write("empty.yaml", ""))])
+    assert rc == 2 and "is empty" in err and out == ""
+    b = tmp_path / "spec.yaml"
+    b.write_bytes(b"\x89PNG\r\n\x1a\n\x00\x00")
+    rc, _, err = run_main(mod, [str(b)])
+    assert rc == 2 and "binary" in err
+
+
+def test_non_mapping_documents_exit_2_not_a_finding(write):
+    # these used to exit 1 with an OAS-000 finding, which reads as "a spec with problems" rather than "wrong file"
+    rc, out, err = run_main(mod, [str(write("list.json", "[1, 2, 3]"))])
+    assert rc == 2 and "top level is a list" in err and out == ""
+    rc, _, err = run_main(mod, [str(write("notes.txt", "just some text\n"))])
+    assert rc == 2 and "plain text" in err
