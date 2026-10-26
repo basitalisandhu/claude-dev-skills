@@ -134,3 +134,42 @@ spec:
           limits: {cpu: "500m", memory: 128Mi}
 """
     assert yaml.load(text) == pyyaml.safe_load(text)
+
+
+# Inputs that made the reader loop for ever ("- - -:" and friends) or raise something other than YAMLError. Each
+# runs in a child process under a timeout, so a regression fails the test instead of hanging the suite.
+HANG_OR_CRASH = ["- - -:", "- - - -:", "-  - -:", "a:\n  - - -:", "- - ----: --->#[1", "-  - - }'b: ", "[[a]: 1]",
+                 "[{1}:- ", "--- &x", "---  !t "]
+
+_FUZZ_CHILD = r"""
+import importlib.util, random, sys
+spec = importlib.util.spec_from_file_location("m", sys.argv[1]); m = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(m)
+cases = sys.argv[3:]
+tokens = ["-", " ", "- ", ":", ": ", "a", "b: ", "\n", "  ", "[", "]", "{", "}", ",", "&x", "*x", "|", ">", "#", "'",
+          '"', "? ", "---", "...", "!t ", "-:", "1"]
+rng = random.Random(20261026)
+cases += ["".join(rng.choice(tokens) for _ in range(rng.randrange(1, 14))) for _ in range(int(sys.argv[2]))]
+for text in cases:
+    try:
+        m.load(text)
+    except m.YAMLError:
+        pass
+print("ok", len(cases))
+"""
+
+
+@pytest.mark.parametrize("copy", COPIES, ids=lambda p: p.parts[-3])
+def test_malformed_sequences_terminate_with_yaml_error(copy):
+    import subprocess
+    import sys
+
+    proc = subprocess.run([sys.executable, "-c", _FUZZ_CHILD, str(copy), "3000", *HANG_OR_CRASH], capture_output=True,
+                          text=True, encoding="utf-8", timeout=60)
+    assert proc.returncode == 0 and proc.stdout.startswith("ok"), proc.stderr[-2000:]
+
+
+def test_dash_dash_dash_colon_is_a_yaml_error():
+    with pytest.raises(yaml.YAMLError, match="cannot parse this sequence item"):
+        yaml.load("- - -:")
+    assert yaml.load("--- &x") is None

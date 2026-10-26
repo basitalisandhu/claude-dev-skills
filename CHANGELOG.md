@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-10-26
+
+### Fixed
+
+- The bundled YAML reader (`_miniyaml.py` in `api-contract-review`, `github-actions-author`, `k8s-manifest-review` and `terraform-apply-gate`) looped for ever on a malformed sequence such as `- - -:`, so `openapi_lint.py`, `gha_lint.py`, `k8s_review.py` and `terraform_apply_gate.py --policy` hung instead of exiting 2. A sequence item that consumes no input now raises a YAML error ("cannot parse this sequence item"). The same reader raised `TypeError` on a flow collection used as a mapping key (`[[a]: 1]`) and `IndexError` on a document start followed only by an anchor or tag (`--- &x`); the first is now a YAML error and the second an empty document. The sequence and flow-key fixes are equivalent to the ones in m365-governance-skills 0.6.0.
+- `tests/test_miniyaml.py` runs the inputs above and 3,000 seeded random YAML fragments against every copy in a child process under a 60-second timeout, so a new hang fails the test instead of stalling CI. 200,000 fragments run clean locally.
+
 ## [0.4.0] - 2026-10-26
 
 ### Added
