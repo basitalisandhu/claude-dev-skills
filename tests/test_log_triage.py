@@ -70,3 +70,36 @@ def test_empty_and_binary_input_exit_2(write, tmp_path):
 def test_top_must_be_positive(write):
     rc, _, err = run_main(mod, [str(write("a.log", "ERROR boom\n")), "--top", "-1"])
     assert rc == 2 and "1 or more" in err
+
+
+def test_since_and_until_keep_a_subset_and_attach_the_stack_trace(write):
+    f = write("app.log", LOG)
+    rc, rep = run_json(mod, [str(f), "--json", "--since", "2026-01-02T10:00:02Z", "--until", "2026-01-02T10:00:03Z"])
+    assert rc == 0
+    assert [(c["level"], c["count"]) for c in rep["clusters"]] == [("error", 2)]
+    assert rep["clusters"][0]["continuation_lines"] == 3
+    assert rep["window"]["lines_outside"] == 4  # two info lines, the warning and the debug line
+
+
+def test_window_that_keeps_nothing_exits_0_with_no_clusters(write):
+    f = write("app.log", LOG)
+    rc, rep = run_json(mod, [str(f), "--json", "--since", "2027-01-01"])
+    assert rc == 0 and rep["clusters"] == [] and rep["window"]["lines_outside"] == rep["lines"]
+
+
+def test_syslog_lines_use_the_current_year_and_a_date_until_covers_the_day(write, monkeypatch):
+    monkeypatch.setattr(mod, "current_year", lambda: 2026)
+    f = write("syslog", "Jan  2 23:59:00 host app[1]: ERROR late\nJan  3 00:00:01 host app[1]: ERROR next day\n"
+                        "02/Jan/2026:12:00:00 +0000 \"GET / HTTP/1.1\" 500\n")
+    rc, rep = run_json(mod, [str(f), "--json", "--since", "2026-01-02", "--until", "2026-01-02"])
+    assert rc == 0
+    assert sorted(c["example"] for c in rep["clusters"]) == ['02/Jan/2026:12:00:00 +0000 "GET / HTTP/1.1" 500',
+                                                            "Jan  2 23:59:00 host app[1]: ERROR late"]
+
+
+def test_bad_window_values_exit_2(write):
+    f = write("app.log", LOG)
+    rc, _out, err = run_main(mod, [str(f), "--since", "yesterday"])
+    assert rc == 2 and "ISO 8601" in err
+    rc, _out, err = run_main(mod, [str(f), "--since", "2026-01-03", "--until", "2026-01-02"])
+    assert rc == 2 and "--until is before --since" in err

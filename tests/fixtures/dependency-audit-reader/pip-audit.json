@@ -1,0 +1,23 @@
+[
+  {
+    "name": "requests",
+    "version": "2.25.0",
+    "vulns": [
+      {
+        "id": "PYSEC-2023-74",
+        "fix_versions": [
+          "2.31.0"
+        ],
+        "aliases": [
+          "CVE-2023-32681"
+        ],
+        "description": "Leaks Proxy-Authorization"
+      }
+    ]
+  },
+  {
+    "name": "safe",
+    "version": "1.0",
+    "vulns": []
+  }
+]

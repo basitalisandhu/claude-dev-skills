@@ -95,3 +95,13 @@ def test_binary_files_skipped_and_excluded_dirs_ignored(write, tmp_path):
     rc, rep = run_json(mod, [str(tmp_path), "--json"])
     assert rc == 1 and [f["file"] for f in rep["findings"]] == ["thirdparty/lib.py"]
     assert FAKE_GITHUB_TOKEN not in json.dumps(rep)
+
+
+def test_env_fingerprint_is_the_same_on_every_os(write, tmp_path):
+    import hashlib
+
+    write("app/sub/.env", "DEBUG=1\n")
+    rc, rep = run_json(mod, [str(tmp_path), "--json"])
+    found = [f for f in rep["findings"] if f["rule"] == "env-file-not-ignored"]
+    assert found and found[0]["file"] == "app/sub/.env"
+    assert found[0]["fingerprint"] == hashlib.sha256(b"app/sub/.env\nenv-file-not-ignored").hexdigest()[:16]

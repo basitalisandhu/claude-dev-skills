@@ -1,0 +1,20 @@
+name: bad
+on:
+  pull_request_target:
+  issue_comment:
+    types: [created]
+jobs:
+  build:
+    runs-on: self-hosted
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@main
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: some/action
+      - uses: other/action@v2
+      - name: greet
+        run: echo "${{ github.event.comment.body }}"
+      - run: curl -s https://x.example/install.sh | sh
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

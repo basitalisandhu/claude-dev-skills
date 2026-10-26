@@ -4,6 +4,29 @@ All notable changes to this project are documented here. The format follows Keep
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-26
+
+### Added
+
+- `log-triage`: `--since` and `--until` keep a time window (#6). The first timestamp in each line decides, in ISO 8601, Apache access-log or syslog format (syslog has no year and is read as the current year); a line without a timestamp follows the line before it, so stack traces stay with their message. A date alone covers the whole day, no offset means UTC, and `--until` before `--since` exits 2. The JSON report gains a `window` object with the lines left outside.
+- A README in every skill folder (42). For the 25 skills with a script it shows the command and a real sample on a committed fixture in `tests/fixtures/<skill>/`; `scripts/render_samples.py` refreshes them and `tests/test_skill_readmes.py` fails when a sample no longer matches the script.
+- `tests/test_fuzz_inputs.py`: seeded fuzzing of every script that reads a file (26 cases: slices deleted or repeated, junk tokens, swapped lines, truncation, invalid UTF-8, and JSON values swapped for other types), plus regression tests for each crash it found. Replay a failure with `FUZZ_SEED`; run longer with `FUZZ_ROUNDS`.
+- `tests/test_integration_release_chain.py`: release notes from a captured git log are added to a CHANGELOG with `changelog.py add`, released with `changelog.py release`, and `check`, `latest` and `show` must agree with the notes.
+- `tests/test_performance.py`: large JavaScript and TypeScript inputs must finish well under the old quadratic times.
+
+### Fixed
+
+- Crashes found by the fuzzer now exit 2 with the file and the reason, instead of a traceback: `api-contract-review` (an `info` or `servers` of the wrong type), `k8s-manifest-review` (a `template`, `securityContext` or container that is not a mapping), `github-actions-author` and `k8s-manifest-review` (parse errors are now also printed to stderr, where an exit 2 had no message), `terraform-apply-gate` (a plan or policy that is not UTF-8, actions or attributes of the wrong type), `dependency-audit-reader` (ids, names or fix versions of the wrong type) and `dockerfile-hardening` (a final `FROM` with no image).
+- `csv-profiler`: a value such as `1e999` that overflows to infinity made the statistics crash; non-finite numbers now count as text.
+- `secrets-hygiene`: the fingerprint of an unignored `.env` finding was built from the OS path, so a baseline written on Linux or macOS did not match on Windows; it now uses the forward-slash path, as the other findings already did.
+- `perf-profile-reader`: functions with the same time were listed in a different order on each run (they were collected through a set); the order is now stable.
+- Line numbers in the JavaScript and TypeScript paths of `api-docs-from-code`, `complexity-report`, `type-coverage` and `dead-code-finder` were found by counting newlines from the start of the file for every match, which made large files quadratic. A binary search over the newline positions gives the same output: on a file of 9,000 copies of the test sample, `extract_docs.py` went from 34.0s to 0.21s, `complexity_report.py` from 11.0s to 0.56s and `type_coverage.py` from 3.52s to 0.21s; `dead_code_finder.py` on 3,000 copies of an exports file went from 1.12s to 0.31s.
+
+### Changed
+
+- 26 skill descriptions reworded around how people ask, after a cross-mode lexical trigger check over all 42 skills (5 should-trigger and 5 should-not-trigger prompts each, every skill's should-trigger prompts also counted against the others): precision 0.92 to 0.98, recall 0.68 to 0.91. Each still has "Use when", "Not for" and a `## Limits` section.
+- Versions 0.4.0 in every `plugin.json` and the marketplace.
+
 ## [0.3.1] - 2026-10-18
 
 ### Fixed

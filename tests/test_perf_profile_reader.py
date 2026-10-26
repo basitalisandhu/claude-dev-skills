@@ -91,3 +91,20 @@ def test_top_must_be_positive_and_forced_format_mismatch_exits_2(write, tmp_path
     assert rc == 2 and "1 or more" in err
     rc, _, err = run_main(mod, [str(f), "--format", "pprof"])
     assert rc == 2 and "pprof" in err
+
+
+def test_ties_rank_the_same_whatever_the_hash_seed(tmp_path):
+    import os
+    import subprocess
+    import sys
+
+    from conftest import script_path
+
+    f = tmp_path / "p.txt"
+    f.write_text(COLLAPSED, encoding="utf-8")
+    outputs = set()
+    for seed in ("1", "2", "3", "4"):
+        proc = subprocess.run([sys.executable, str(script_path("debugging", "perf-profile-reader", "perf_profile_reader.py")), str(f)],
+                              capture_output=True, text=True, encoding="utf-8", env={**os.environ, "PYTHONHASHSEED": seed}, timeout=60)
+        outputs.add(proc.stdout)
+    assert len(outputs) == 1

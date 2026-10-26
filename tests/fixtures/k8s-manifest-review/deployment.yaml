@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  replicas: 1
+  template:
+    spec:
+      hostNetwork: true
+      volumes:
+      - name: sock
+        hostPath:
+          path: /var/run/docker.sock
+      containers:
+      - name: web
+        image: nginx
+        env:
+        - name: DB_PASSWORD
+          value: supersecretvalue
+        securityContext:
+          privileged: true
+          capabilities:
+            add: [SYS_ADMIN]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: prod
+spec:
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: creds
+  namespace: prod
+stringData:
+  password: hunter2

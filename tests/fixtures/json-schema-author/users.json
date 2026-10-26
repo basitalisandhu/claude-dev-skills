@@ -1,0 +1,74 @@
+[
+  {
+    "id": 1,
+    "name": "a",
+    "email": "a@x.io",
+    "status": "active",
+    "tags": [
+      "x"
+    ],
+    "score": 1.5,
+    "meta": {
+      "k": 1
+    },
+    "created": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": 2,
+    "name": "b",
+    "email": "b@x.io",
+    "status": "inactive",
+    "tags": [],
+    "score": 2,
+    "meta": {
+      "k": 2,
+      "extra": true
+    },
+    "created": "2024-01-02T00:00:00Z",
+    "nick": null
+  },
+  {
+    "id": 3,
+    "name": "c",
+    "email": "c@x.io",
+    "status": "active",
+    "tags": [
+      "y",
+      "z"
+    ],
+    "score": 3.25,
+    "meta": {
+      "k": 3
+    },
+    "created": "2024-01-03T00:00:00Z",
+    "nick": "cc"
+  },
+  {
+    "id": 4,
+    "name": "d",
+    "email": "d@x.io",
+    "status": "active",
+    "tags": [
+      "x"
+    ],
+    "score": 0,
+    "meta": {
+      "k": 4
+    },
+    "created": "2024-01-04T00:00:00Z"
+  },
+  {
+    "id": 5,
+    "name": "e",
+    "email": "e@x.io",
+    "status": "banned",
+    "tags": [
+      "x"
+    ],
+    "score": 9.5,
+    "meta": {
+      "k": 5
+    },
+    "created": "2024-01-05T00:00:00Z"
+  }
+]
