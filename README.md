@@ -56,7 +56,7 @@ plugins/<plugin>/
     ├── scripts/<name>.py           optional: argparse, --json, exit codes 0/1/2, standard library only
     ├── references/*.md             optional: checklists, templates, per-tool notes
     └── README.md                   what the skill does; for a script, a real sample on a committed fixture
-tests/test_<script>.py              pytest for every script (25 scripts, 248 tests with the fuzz, integration and README checks)
+tests/test_<script>.py              pytest for every script (25 scripts, 249 tests with the fuzz, integration and README checks)
 tests/fixtures/<skill>/             the inputs the README samples run on (synthetic data)
 scripts/render_samples.py           reruns every README sample; tests fail when one is out of date
 scripts/validate_plugins.py         structure, frontmatter, scripts, READMEs and house style
