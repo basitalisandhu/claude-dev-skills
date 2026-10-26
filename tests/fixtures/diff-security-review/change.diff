@@ -1,0 +1,10 @@
+diff --git a/app/views.py b/app/views.py
+--- a/app/views.py
++++ b/app/views.py
+@@ -1,3 +1,5 @@
+ import os
++query = "SELECT * FROM users WHERE id = " + request.args["id"]
++subprocess.call(cmd, shell=True)
+ def view():
+-    return ok()
++    return eval(request.data)

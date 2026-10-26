@@ -1,0 +1,9 @@
+2026-01-02T10:00:00Z INFO request id=7f3a9c0e-1234-4abc-9def-0123456789ab path=/api/users/42 took 12ms
+2026-01-02T10:00:01Z INFO request id=0a1b2c3d-5678-4abc-9def-0123456789ab path=/api/users/43 took 9ms
+2026-01-02T10:00:02Z ERROR db connection refused host=10.0.0.5:5432 attempt=1
+Traceback (most recent call last):
+  File "/app/db.py", line 10, in connect
+    raise ConnectionError("refused")
+2026-01-02T10:00:03Z ERROR db connection refused host=10.0.0.6:5432 attempt=2
+2026-01-02T10:00:04Z WARN cache miss key="user:42"
+2026-01-02T10:00:05Z DEBUG tick

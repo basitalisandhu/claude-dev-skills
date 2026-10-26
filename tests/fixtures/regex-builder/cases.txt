@@ -1,0 +1,4 @@
+# emails
++ user@example.com
+- not-an-email
+= bob@example.com => {"user": "bob", "domain": "example.com"}

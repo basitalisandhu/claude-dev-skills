@@ -1,0 +1,35 @@
+openapi: 3.0.3
+info:
+  title: Pets
+servers:
+  - url: http://api.example.com/{version}
+paths:
+  /pet_store/{id}/:
+    get:
+      responses:
+        '200':
+          description: ok
+    post:
+      operationId: createPet
+      summary: Create
+      parameters:
+        - name: petId
+          in: path
+          schema: {type: string}
+      responses:
+        '201':
+          description: created
+          content:
+            application/json: {}
+  /petOwners:
+    get:
+      operationId: createPet
+      tags: [owners]
+      responses:
+        '404': {description: nope}
+components:
+  schemas:
+    Unused:
+      type: object
+    Ref:
+      $ref: '#/components/schemas/Missing'

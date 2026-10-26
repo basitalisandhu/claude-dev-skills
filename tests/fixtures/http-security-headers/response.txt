@@ -1,0 +1,11 @@
+HTTP/1.1 200 OK
+Server: nginx/1.18.0
+X-Powered-By: PHP/7.4
+Content-Type: text/html
+Set-Cookie: session=abc; Path=/
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Credentials: true
+X-XSS-Protection: 1; mode=block
+Content-Security-Policy-Report-Only: default-src 'self'
+
+<html></html>

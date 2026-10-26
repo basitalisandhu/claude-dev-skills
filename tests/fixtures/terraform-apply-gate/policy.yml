@@ -1,0 +1,5 @@
+forbid_destroy: [aws_db_instance, "aws_dynamodb_*"]
+protected_names: ["*prod*"]
+allowed_providers: [hashicorp/aws]
+required_tags: [owner, environment]
+max_replace: 1

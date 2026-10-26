@@ -1,0 +1,8 @@
+id,name,amount,active,joined,note
+1,Ann,10.50,true,2024-01-02,
+2,Bob,-3,false,2024-02-03,hello
+3,Cy ,NULL,true,2024-03-04,
+4,Dee,7,true,not a date,x
+4,Dee,7,true,not a date,x
+5,Eve,"1,000",yes,2024-05-06,
+6,Fay,2,true,2024-06-07,note,extra
